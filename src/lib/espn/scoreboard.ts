@@ -29,7 +29,7 @@ export async function getGamesByBeijingDate(beijingDate: string, fetchImpl?: Fet
       const comp = ev.competitions[0];
       const home = comp.competitors.find((c: any) => c.homeAway === 'home');
       const away = comp.competitors.find((c: any) => c.homeAway === 'away');
-      const note = comp.notes?.[0]?.note ?? null; // 如 "NBA Finals Game 7"
+      const note = comp.notes?.[0]?.headline ?? null; // 如 "NBA Finals - Game 7"
       games.push({
         id: ev.id,
         tipoffUtc: ev.date,

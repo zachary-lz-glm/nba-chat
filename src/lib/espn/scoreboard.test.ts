@@ -14,6 +14,7 @@ describe('getGamesByBeijingDate', () => {
     expect(g7!.homeScore).toBe(103);  expect(g7!.awayScore).toBe(91);
     expect(g7!.winner).toBe('home');
     expect(g7!.seriesText).toContain('4-3');
+    expect(g7!.note).toContain('NBA Finals');
     expect(g7!.tipoffBeijing).toContain('6月23日');
   });
   it('北京窗口过滤:查 06-22(美东)不应返回 G7', async () => {
