@@ -4,7 +4,10 @@ import { DefaultChatTransport } from 'ai';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { Composer } from '@/components/chat/Composer';
+import { SessionDrawer } from '@/components/sessions/SessionDrawer';
+import { SettingsDialog } from '@/components/settings/SettingsDialog';
 import { getClientConfig } from '@/lib/client/config';
+import { useSessions } from '@/lib/client/sessions';
 
 export default function Home() {
   const [config] = useState(() => getClientConfig());
@@ -21,11 +24,18 @@ export default function Home() {
     if (chat.status === 'submitted') { startedAt.current = Date.now(); setElapsed(undefined); }
     if (chat.status === 'ready' && startedAt.current) setElapsed(Date.now() - startedAt.current);
   }, [chat.status]);
+
+  const { sessions, activeId, switchTo, startNew, remove } = useSessions(chat.messages, chat.setMessages);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   return (
     <main className="nba-app">
       <header className="nba-header">
+        <button type="button" className="nba-icon-btn" onClick={() => setDrawerOpen(true)} aria-label="会话列表">☰</button>
         <h1>NBA Chat</h1>
         <span className="nba-sub">官方风格智能问答 · 数据实时查证</span>
+        <button type="button" className="nba-icon-btn nba-settings-entry" onClick={() => setSettingsOpen(true)} aria-label="设置">⚙ 设置</button>
       </header>
       <div className="nba-thread">
         {chat.messages.length === 0 && (
@@ -43,6 +53,17 @@ export default function Home() {
         )}
       </div>
       <Composer onSend={(t) => chat.sendMessage({ text: t })} onStop={() => chat.stop()} streaming={chat.status !== 'ready'} />
+      {drawerOpen && (
+        <SessionDrawer
+          sessions={sessions}
+          activeId={activeId}
+          onSelect={switchTo}
+          onNew={startNew}
+          onDelete={remove}
+          onClose={() => setDrawerOpen(false)}
+        />
+      )}
+      {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
     </main>
   );
 }
