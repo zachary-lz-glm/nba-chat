@@ -889,8 +889,7 @@ import { getNews } from '../espn/news';
 import { getWikiSummary } from '../espn/wiki';
 
 type Ctx = { fetchImpl?: <T>(u: string) => Promise<T> } & Record<string, unknown>;
-const withCtx = <A, R>(fn: (args: A, fetchImpl?: any) => Promise<R>, args: A, ctx: Ctx) =>
-  fn(args as never, (ctx as { fetchImpl?: any }).fetchImpl);
+// 工具 execute 直接调用客户端函数,末参传 ctx?.fetchImpl(生产为 undefined 走真实 fetch;单测注入 fixture)
 
 const fail = { error: '数据源暂不可用:请向用户说明暂无该数据,不要编造' };
 
@@ -899,7 +898,7 @@ export const nbaTools = {
     description: '按北京时间日期查询当天 NBA 赛程与赛果(比分/状态/季后赛系列赛大比分)。日期一律用北京时间,格式 YYYY-MM-DD。',
     inputSchema: z.object({ date: z.string().describe('北京日期 YYYY-MM-DD,如 2025-06-23') }),
     execute: async ({ date }, ctx: Ctx) => {
-      try { return { games: await withCtx(getGamesByBeijingDate, { beijingDate: date }, ctx) }; } catch { return fail; }
+      try { return { games: await getGamesByBeijingDate(date, ctx?.fetchImpl) }; } catch { return fail; }
     },
   }),
   get_game_box: tool({
@@ -908,8 +907,8 @@ export const nbaTools = {
     execute: async ({ game_id }, ctx: Ctx) => {
       try {
         const [meta, box] = await Promise.all([
-          withCtx(getGameMeta as any, game_id, ctx),
-          withCtx(getBoxScore, game_id, ctx),
+          getGameMeta(game_id, ctx?.fetchImpl),
+          getBoxScore(game_id, ctx?.fetchImpl),
         ]);
         return { game: meta, box: box.teams };
       } catch { return fail; }
@@ -924,7 +923,7 @@ export const nbaTools = {
       period: z.number().optional().describe('按节过滤:1-4,加时从 5 起'),
     }),
     execute: async (a, ctx: Ctx) => {
-      try { return { plays: await withCtx(getPlays, { eventId: a.game_id, opts: { lastSeconds: a.last_seconds, scoringOnly: a.scoring_only, period: a.period } } as never, ctx) }; } catch { return fail; }
+      try { return { plays: await getPlays(a.game_id, { lastSeconds: a.last_seconds, scoringOnly: a.scoring_only, period: a.period }, ctx?.fetchImpl) }; } catch { return fail; }
     },
   }),
   get_series_or_games_lookup: tool({
@@ -941,7 +940,7 @@ export const nbaTools = {
           days.push(d.toISOString().slice(0, 10));
           if (days.length > 14) return { error: '范围过长,请拆分查询' };
         }
-        const perDay = await Promise.all(days.map((day) => withCtx(getGamesByBeijingDate, { beijingDate: day }, ctx)));
+        const perDay = await Promise.all(days.map((day) => getGamesByBeijingDate(day, ctx?.fetchImpl)));
         const games = perDay.flat().filter((g: any) => !a.team_abbr || g.homeAbbr === a.team_abbr || g.awayAbbr === a.team_abbr);
         return { games };
       } catch { return fail; }
@@ -951,14 +950,14 @@ export const nbaTools = {
     description: '查常规赛排名(东部/西部)。season 为起始年,如 2025-26 赛季传 2025。',
     inputSchema: z.object({ season: z.number().describe('赛季起始年,如 2025') }),
     execute: async ({ season }, ctx: Ctx) => {
-      try { return { conferences: await withCtx(getStandings, { seasonStartYear: season }, ctx) }; } catch { return fail; }
+      try { return { conferences: await getStandings(season, ctx?.fetchImpl) }; } catch { return fail; }
     },
   }),
   search_player: tool({
     description: '按名字(中/英)搜索球员,返回 ESPN 球员 ID 与现役球队。查球员数据前先调本工具拿 ID。',
     inputSchema: z.object({ name: z.string() }),
     execute: async ({ name }, ctx: Ctx) => {
-      try { return { players: await withCtx(searchPlayer, { query: name }, ctx) }; } catch { return fail; }
+      try { return { players: await searchPlayer(name, ctx?.fetchImpl) }; } catch { return fail; }
     },
   }),
   get_player_stats: tool({
@@ -967,9 +966,9 @@ export const nbaTools = {
     execute: async (a, ctx: Ctx) => {
       try {
         const [profile, career, seasonLog] = await Promise.all([
-          withCtx(getAthleteProfile, a.player_id, ctx),
-          withCtx(getAthleteCareer, a.player_id, ctx),
-          a.season ? withCtx(getAthleteGamelog, { id: a.player_id, season: a.season }, ctx) : Promise.resolve(null),
+          getAthleteProfile(a.player_id, ctx?.fetchImpl),
+          getAthleteCareer(a.player_id, ctx?.fetchImpl),
+          a.season ? getAthleteGamelog(a.player_id, a.season, ctx?.fetchImpl) : Promise.resolve(null),
         ]);
         return { profile, career, seasonLog };
       } catch { return fail; }
@@ -981,7 +980,7 @@ export const nbaTools = {
     execute: async (a, ctx: Ctx) => {
       try {
         const season = a.season ?? 2026;
-        return { games: await withCtx(getAthleteGamelog, { id: a.player_id, season }, ctx) };
+        return { games: await getAthleteGamelog(a.player_id, season, ctx?.fetchImpl) };
       } catch { return fail; }
     },
   }),
