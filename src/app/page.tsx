@@ -25,7 +25,7 @@ export default function Home() {
     if (chat.status === 'ready' && startedAt.current) setElapsed(Date.now() - startedAt.current);
   }, [chat.status]);
 
-  const { sessions, activeId, switchTo, startNew, remove } = useSessions(chat.messages, chat.setMessages);
+  const { sessions, activeId, switchTo, startNew, remove } = useSessions(chat);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
