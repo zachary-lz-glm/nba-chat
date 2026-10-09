@@ -13,10 +13,14 @@ const NAMES: Record<string, string> = {
 export function ToolStrip({ toolNames, running }: { toolNames: string[]; running: boolean }) {
   if (!toolNames.length) return null;
   return (
-    <div className="text-xs opacity-70 my-1 flex items-center gap-1 flex-wrap">
-      {running && <span className="nba-dot" />}
+    <div className={`nba-tools${running ? ' running' : ' done'}`}>
+      {running && <span className="nba-dot" aria-hidden="true" />}
       {toolNames.map((n, i) => (
-        <span key={i} className="rounded bg-white/10 px-1.5 py-0.5">正在{NAMES[n] ?? '查证数据'}…</span>
+        <span key={i} className="nba-tool-chip">
+          {running
+            ? <>{NAMES[n] ?? '查证数据'}<span aria-hidden="true">…</span></>
+            : <><span aria-hidden="true">✓ </span>已{NAMES[n] ?? '查证数据'}</>}
+        </span>
       ))}
     </div>
   );
