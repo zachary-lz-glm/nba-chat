@@ -24,7 +24,7 @@
   - summary: `GET .../summary?event={id}`(plays[] 有 text/shortDescription/clock.displayValue/period.number/homeScore/awayScore/scoringPlay/shootingPlay/sequenceNumber;boxscore.players[] 按 team 分组,statistics[0].names 与 athletes[].stats 位置对齐,names 含 MIN,PTS,FG,3PT,FT,REB,AST,TO,STL,BLK,OREB,DREB,PF,+/-)
   - standings: `GET https://site.api.espn.com/apis/v2/sports/basketball/nba/standings?season=YYYY`(children[] = 东西部,standings.entries[] .team.abbreviation + stats[] 按 name 取 wins/losses/winPercent/playoffSeed)
   - search: `GET https://site.web.api.espn.com/apis/search/v2?query=...&limit=10`(results[] 按 type 分组;player 项的数字 id 在 `uid` 形如 `s:40~l:46~a:4278073` 与 link.web 中)
-  - athlete: `GET https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/{id}`;`.../athletes/{id}/stats?season=YYYY`(categories: averages/totals/miscellaneous,根级 names/displayNames 与 categories[].totals 位置对齐);`.../athletes/{id}/gamelog?season=YYYY`(events 是 gameId→entry 字典,entry 有 gameDate/atVs/opponent.abbreviation/gameResult/homeTeamScore/awayTeamScore/stats[],stats 与根级 names 对齐)
+  - athlete: `GET https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/{id}`(档案);`.../athletes/{id}/stats`(**忽略 season 参数,恒为生涯聚合**;可加 `seasontype=2` 常规/`=3` 季后,默认 2;标签在 `categories[].labels`,与 `categories[].totals` 位置对齐,labels 含 GP/GS/MIN/FG/FG%/3PT/3P%/FT/FT%/OR/DR/REB/AST/BLK/STL/PF/TO/PTS);`.../athletes/{id}/gamelog?season=YYYY`(尊重 season 参数;**逐场数据在 `seasonTypes[].categories[].events[]`**,每个 event 有 eventId + stats[],stats 与根级 `labels`=[MIN,FG,FG%,3PT,3P%,FT,FT%,REB,AST,BLK,STL,PF,TO,PTS] 位置对齐;根级 `events` 是 gameId→{gameDate/atVs/opponent.abbreviation/gameResult/homeTeamScore/awayTeamScore} 字典但**无 stats**,两者按 eventId 关联;验证样本:2024-25 SGA gamelog 105 场含季前赛,Postseason→NBA Finals→eventId 401766128 stats 首尾 = MIN 40 / PTS 29)
   - news: `GET https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news?limit=N`(articles[].headline/published/description)
   - wiki: `GET https://zh.wikipedia.org/api/rest_v1/page/summary/{title}`(extract 字段)
   - 验证样本:2025 总决赛 G7 event=401766128,OKC 103-91 IND,系列赛 4-3,Siakam 16 分(IND),G7 北京时间 2025-06-23 08:00 开球
@@ -91,7 +91,7 @@ npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --
 
 ```bash
 npm i ai@^7.0.136 @ai-sdk/openai-compatible@^3.0.67 @ai-sdk/react@^4.0.139 zod@^4.6.5 react-markdown@^10 remark-gfm@^4 use-stick-to-bottom@^1.1.6
-npm i -D vitest@^5
+npm i -D vitest@^5 tsx
 ```
 
 - [ ] **Step 3: vitest 配置**
@@ -618,8 +618,8 @@ git add src/lib/espn/summary.ts src/lib/espn/summary.test.ts && git commit -m "f
   - `getStandings(seasonStartYear: number, fetchImpl?): Promise<Array<{ conference: string; rows: Array<{ rank: number; team: string; abbr: string; w: string; l: string; pct: string }> }>>`
   - `searchPlayer(name: string, fetchImpl?): Promise<Array<{ id: number; name: string; team: string }>>`(从 uid 解析数字 id)
   - `getAthleteProfile(id: number, fetchImpl?): Promise<{ name: string; height: string; weight: string; position: string; team: string }>`
-  - `getAthleteSeasonStats(id: number, season: number, fetchImpl?): Promise<{ season: number; averages: Record<string, string>; totals: Record<string, string> }>`
-  - `getAthleteGamelog(id: number, season: number, fetchImpl?): Promise<Array<{ date: string; opp: string; atVs: string; result: string; score: string; pts: string; reb: string; ast: string }>>`(按日期升序)
+  - `getAthleteCareer(id: number, fetchImpl?): Promise<{ regular: Record<string, string>; postseason: Record<string, string> }>`(stats 端点生涯聚合,seasontype=2/3 各一次;键取 labels:GP/MIN/REB/AST/PTS 等)
+  - `getAthleteGamelog(id: number, season: number, fetchImpl?): Promise<Array<{ group: string; date: string; opp: string; atVs: string; result: string; score: string; min: string; pts: string; reb: string; ast: string }>>`(group 来自 seasonTypes displayName 如 'Regular Season'/'Postseason',按日期升序;seasonTypes 内无日期,需与根级 events 按 eventId 关联)
   - `getNews(limit?: number, fetchImpl?): Promise<Array<{ headline: string; published: string; description: string }>>`
   - `getWikiSummary(title: string): Promise<{ title: string; extract: string } | null>`(404/异常返回 null,不 throw)
 
@@ -652,7 +652,7 @@ describe('getStandings', () => {
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { searchPlayer, getAthleteSeasonStats, getAthleteGamelog } from './players';
+import { searchPlayer, getAthleteCareer, getAthleteGamelog } from './players';
 
 const load = (n: string) => JSON.parse(readFileSync(fileURLToPath(new URL(`../../tests/fixtures/${n}`, import.meta.url)), 'utf8'));
 
@@ -661,20 +661,21 @@ describe('players', () => {
     const r = await searchPlayer('shai', async () => load('search-sga.json'));
     expect(r[0]).toEqual({ id: 4278073, name: 'Shai Gilgeous-Alexander', team: expect.stringContaining('Thunder') });
   });
-  it('赛季数据:SGA 2024-25 常规赛场均 34.2 分(已知事实,取 averages 里的 PTS)', async () => {
-    const st = await getAthleteSeasonStats(4278073, 2025, async () => load('stats-4278073-2025.json'));
-    expect(st.averages['PTS']).toBe('34.2');
+  it('生涯数据:stats 端点返回生涯聚合,SGA 生涯常规赛场均 25.3 分(fixture 实测值)', async () => {
+    const c = await getAthleteCareer(4278073, async () => load('stats-4278073-2025.json'));
+    expect(c.regular['PTS']).toBe('25.3');
   });
-  it('逐场:2025 赛季 gamelog 最后一场(按日期升序)是总决赛 G7(6月23日 UTC),对手 IND', async () => {
+  it('逐场:2025 赛季最后一场是总决赛 G7(北京 6月23日),Postseason 组、对手 IND、SGA 29 分(fixture 实测值)', async () => {
     const gl = await getAthleteGamelog(4278073, 2025, async () => load('gamelog-4278073-2025.json'));
     const last = gl[gl.length - 1];
+    expect(last.group).toContain('Postseason');
     expect(last.opp).toBe('IND');
-    expect(last.date).toContain('06-23');
+    expect(last.pts).toBe('29');
   });
 });
 ```
 
-注:`averages['PTS']` 期望 `34.2`、CLE 64 胜为 2024-25 已知事实;若 fixture 字段名不同(如 winPercent/wins 拼写差异),以 fixture 实际为准修正实现而非测试断言。
+注:CLE 64 胜、OKC 68 胜(西部第一)为 2024-25 已知事实且已实测;SGA 生涯 25.3 分、G7 29 分为 fixture 实测值,断言与 fixture 绑定而非记忆。
 
 - [ ] **Step 2: 跑测试确认失败**
 
@@ -740,36 +741,45 @@ export async function getAthleteProfile(id: number, fetchImpl?: <T>(u: string) =
   };
 }
 
-export async function getAthleteSeasonStats(id: number, season: number, fetchImpl?: <T>(u: string) => Promise<T>) {
+/** stats 端点忽略 season 参数,恒为生涯聚合;seasontype=2 常规 / =3 季后 */
+export async function getAthleteCareer(id: number, fetchImpl?: <T>(u: string) => Promise<T>) {
   const f = fetchImpl ?? (<T>(u: string) => fetchJson<T>(u));
-  const d = await f<any>(`${BASE}/athletes/${id}/stats?season=${season}`);
-  const names: string[] = d.names ?? [];
-  const pick = (cat: any) => {
+  const one = async (seasontype: 2 | 3) => {
+    const d = await f<any>(`${BASE}/athletes/${id}/stats?seasontype=${seasontype}`);
+    const avg = d.categories?.find((c: any) => c.name === 'averages');
     const o: Record<string, string> = {};
-    names.forEach((n, i) => (o[n] = cat?.totals?.[i] ?? ''));
+    (avg?.labels ?? []).forEach((n: string, i: number) => (o[n] = avg?.totals?.[i] ?? ''));
     return o;
   };
-  const avg = d.categories?.find((c: any) => c.name === 'averages');
-  const tot = d.categories?.find((c: any) => c.name === 'totals');
-  return { season, averages: pick(avg), totals: pick(tot) };
+  return { regular: await one(2), postseason: await one(3) };
 }
 
 export async function getAthleteGamelog(id: number, season: number, fetchImpl?: <T>(u: string) => Promise<T>) {
   const f = fetchImpl ?? (<T>(u: string) => fetchJson<T>(u));
   const d = await f<any>(`${BASE}/athletes/${id}/gamelog?season=${season}`);
-  const names: string[] = d.names ?? [];
-  const idx = (n: string) => names.indexOf(n);
-  const rows = Object.values(d.events ?? {}).map((g: any) => ({
-    date: g.gameDate ?? '',
-    opp: g.opponent?.abbreviation ?? '',
-    atVs: g.atVs === 'at' ? '客@' : '主vs',
-    result: g.gameResult ?? '',
-    score: `${g.team?.score ?? g.homeTeamScore ?? ''}-${g.opponent?.score ?? g.awayTeamScore ?? ''}`,
-    pts: g.stats?.[idx('PTS')]?.displayValue ?? '',
-    reb: g.stats?.[idx('REB')]?.displayValue ?? '',
-    ast: g.stats?.[idx('AST')]?.displayValue ?? '',
-  }));
-  return rows.sort((a: any, b: any) => a.date.localeCompare(b.date));
+  const labels: string[] = d.labels ?? []; // MIN,FG,FG%,3PT,3P%,FT,FT%,REB,AST,BLK,STL,PF,TO,PTS
+  const idx = (n: string) => labels.indexOf(n);
+  const meta = d.events ?? {}; // gameId -> { gameDate, atVs, opponent, gameResult, homeTeamScore, awayTeamScore }
+  const rows: Array<{ group: string; date: string; opp: string; atVs: string; result: string; score: string; min: string; pts: string; reb: string; ast: string }> = [];
+  for (const st of d.seasonTypes ?? []) {
+    for (const cat of st.categories ?? []) {
+      for (const ev of cat.events ?? []) {
+        const m = meta[ev.eventId] ?? {};
+        const s = ev.stats ?? [];
+        rows.push({
+          group: st.displayName ?? cat.displayName ?? '',
+          date: m.gameDate ?? '',
+          opp: m.opponent?.abbreviation ?? '',
+          atVs: m.atVs === 'at' ? '客@' : '主vs',
+          result: m.gameResult ?? '',
+          score: `${m.homeTeamScore ?? ''}-${m.awayTeamScore ?? ''}`,
+          min: s[idx('MIN')] ?? '', pts: s[idx('PTS')] ?? '',
+          reb: s[idx('REB')] ?? '', ast: s[idx('AST')] ?? '',
+        });
+      }
+    }
+  }
+  return rows.sort((a, b) => a.date.localeCompare(b.date));
 }
 ```
 
@@ -874,7 +884,7 @@ import { tool } from 'ai';
 import { z } from 'zod';
 import { getGamesByBeijingDate } from '../espn/scoreboard';
 import { getBoxScore, getPlays, getGameMeta } from '../espn/summary';
-import { getStandings, searchPlayer, getAthleteProfile, getAthleteSeasonStats, getAthleteGamelog } from '../espn/players';
+import { getStandings, searchPlayer, getAthleteProfile, getAthleteCareer, getAthleteGamelog } from '../espn/players';
 import { getNews } from '../espn/news';
 import { getWikiSummary } from '../espn/wiki';
 
@@ -952,21 +962,21 @@ export const nbaTools = {
     },
   }),
   get_player_stats: tool({
-    description: '按球员 ID 查档案 + 某赛季场均/总数(PTS/REB/AST 等)。season 传起始年;不传 season 默认本赛季。',
+    description: '按球员 ID 查档案 + 生涯场均(常规赛/季后赛) + 可选某赛季逐场数据(含分组:常规赛/季后赛)。season 传起始年(如 2025 指 2025-26 赛季);不传 season 则只返回档案与生涯。',
     inputSchema: z.object({ player_id: z.number(), season: z.number().optional() }),
     execute: async (a, ctx: Ctx) => {
       try {
-        const season = a.season ?? 2026; // 当前赛季起始年,由 prompt 动态告知,此处兜底
-        const [profile, stats] = await Promise.all([
+        const [profile, career, seasonLog] = await Promise.all([
           withCtx(getAthleteProfile, a.player_id, ctx),
-          withCtx(getAthleteSeasonStats, { id: a.player_id, season }, ctx),
+          withCtx(getAthleteCareer, a.player_id, ctx),
+          a.season ? withCtx(getAthleteGamelog, { id: a.player_id, season: a.season }, ctx) : Promise.resolve(null),
         ]);
-        return { profile, stats };
+        return { profile, career, seasonLog };
       } catch { return fail; }
     },
   }),
   get_player_gamelog: tool({
-    description: '按球员 ID 查某赛季逐场数据(日期/对手/胜负/PTS/REB/AST),用于连胜连败、场均推导、某场具体表现。',
+    description: '按球员 ID 查某赛季逐场数据(分组标注常规赛/季后赛;日期/对手/胜负/MIN/PTS/REB/AST),用于连胜连败、场均推导、某场具体表现。season 传起始年(如 2025 指 2025-26 赛季)。',
     inputSchema: z.object({ player_id: z.number(), season: z.number().optional() }),
     execute: async (a, ctx: Ctx) => {
       try {
@@ -1398,8 +1408,7 @@ export function ChatMessage({ message, elapsed }: { message: UIMessage; elapsed?
       <ToolStrip toolNames={[...new Set(toolNames)]} running={running} />
       {message.parts.map((p, i) => {
         if (p.type === 'text') return <Markdown key={i} content={p.text} />;
-        if (p.type === 'tool-gt unknown') return null; // 占位防误删 —— 实现时删除此行
-        return null;
+        return null; // 工具类 part 不在正文渲染(状态条已呈现)
       })}
       {elapsed != null && <div className="text-[10px] opacity-40 mt-1">{(elapsed / 1000).toFixed(1)}s</div>}
     </div>
@@ -1407,7 +1416,7 @@ export function ChatMessage({ message, elapsed }: { message: UIMessage; elapsed?
 }
 ```
 
-注意:上面 `tool-gt unknown` 一行是笔误占位,实现时直接删掉;ai v7 UIMessage parts 的工具部分类型以 `node_modules/ai` 的类型为准(通常为 `tool-${state}` 形式的动态键或 `type:'tool-call'`),ToolStrip 的取法保持"收集 toolName + 判断是否仍在流式输入"两点语义即可。
+注意:ai v7 UIMessage parts 的工具部分类型以 `node_modules/ai` 的类型定义为准(可能为 `tool-${state}` 动态键或 `type:'tool-invocation'` 等),ToolStrip 的取法保持"收集 toolName + 判断是否仍在流式输入"两点语义即可;实现后跑 `npm run build` 做 TypeScript 校验。
 
 `src/components/chat/Composer.tsx`:
 
@@ -1761,5 +1770,5 @@ https_proxy=http://127.0.0.1:8118 git push
 ## 计划自审记录
 
 - **Spec 覆盖**:spec §3-§10 全部映射到 Task 2-15;spec §9 UI skill 流程在 Task 12;spec §7 交付物 PDF/README 在 Task 15;成本核算在 Task 15 Step 1.7
-- **占位符扫描**:Task 10 ChatMessage 中的 `tool-gt unknown` 行已显式标注"实现时删除",其余无 TBD/TODO
-- **类型一致性**:`ClientModelConfig`(model.ts)在 config.ts/route/测试中签名一致;`withCtx` 包装在 tools.ts 内自洽;fixture 文件名在 Task 3 生成、Task 4/5/6 消费,命名一致
+- **占位符扫描**:无 TBD/TODO;Task 10 的 ChatMessage 占位行已在预检中移除
+- **类型一致性**:`ClientModelConfig`(model.ts)在 config.ts/route/测试中签名一致;`withCtx` 包装在 tools.ts 内自洽;fixture 文件名在 Task 3 生成、Task 4/5/6 消费,命名一致;球员数据接口经预检实测修正为 getAthleteCareer/getAthleteGamelog(seasonTypes 结构),Task 5/6 已同步
