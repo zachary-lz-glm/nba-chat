@@ -16,6 +16,7 @@ describe('getGamesByBeijingDate', () => {
     expect(g7!.seriesText).toContain('4-3');
     expect(g7!.note).toContain('NBA Finals');
     expect(g7!.tipoffBeijing).toContain('6月23日');
+    expect(g7!.seasonLabel).toBe('2024-25 季后赛');
   });
   it('北京窗口过滤:查 06-22(美东)不应返回 G7', async () => {
     // fixture 只含美东 06-22 的比赛;北京 06-22 = 美东 06-21/06-22 白天,G7 开球在北京 06-23 → 应为空

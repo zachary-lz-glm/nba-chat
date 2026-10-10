@@ -7,7 +7,12 @@ export type GameSummary = {
   homeScore: number | null; awayScore: number | null;
   status: string; winner: 'home' | 'away' | null;
   seriesText: string | null; note: string | null;
+  seasonLabel: string | null; // 如 "2024-25 季后赛" / "2026-27 季前赛"
 };
+
+const SEASON_PHASES: Record<number, string> = { 1: '季前赛', 2: '常规赛', 3: '季后赛' };
+const seasonLabelOf = (season: { year: number; type: number } | undefined) =>
+  season ? `${season.year - 1}-${String(season.year).slice(2)}${SEASON_PHASES[season.type] ? ` ${SEASON_PHASES[season.type]}` : ''}` : null;
 
 type FetchImpl = <T>(url: string) => Promise<T>;
 
@@ -42,6 +47,7 @@ export async function getGamesByBeijingDate(beijingDate: string, fetchImpl?: Fet
         winner: home.winner ? 'home' : away.winner ? 'away' : null,
         seriesText: comp.series?.summary ?? null,
         note,
+        seasonLabel: seasonLabelOf(ev.season),
       });
     }
   }

@@ -41,9 +41,11 @@
   --r-ctl: 10px;
   --r-chip: 999px;
 
-  /* 阴影(带底色蓝调,拒绝纯黑投影) */
-  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 10px 30px rgba(3, 6, 15, 0.45);
-  --shadow-pop: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 24px 70px rgba(3, 6, 15, 0.6);
+  /* 阴影(带底色蓝调,拒绝纯黑投影;两段式:近距接触 + 远距环境) */
+  --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 2px rgba(3, 6, 15, 0.55),
+    0 12px 34px rgba(3, 6, 15, 0.42);
+  --shadow-pop: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 6px rgba(3, 6, 15, 0.55),
+    0 24px 70px rgba(3, 6, 15, 0.6);
 
   /* 动效曲线(全部自定贝塞尔,不用 linear / ease-in-out) */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -147,7 +149,11 @@ body {
   gap: 0.75rem;
   padding: 0.7rem 1rem;
   border-bottom: 1px solid var(--line-1);
-  background: linear-gradient(180deg, rgba(18, 22, 30, 0.92), rgba(14, 17, 24, 0.92));
+  /* score-bug 上沿受光:冷色顶光 + 双层渐变底 + 内侧发丝高光 */
+  background:
+    radial-gradient(340px 90px at 14% 0%, rgba(29, 66, 138, 0.12), transparent 72%),
+    linear-gradient(180deg, rgba(21, 25, 34, 0.96), rgba(13, 16, 22, 0.96));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
   position: relative;
   flex-shrink: 0;
 }
@@ -185,7 +191,9 @@ body {
   font-weight: 800;
   font-size: 0.78rem;
   letter-spacing: 0.1em;
-  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.28), 0 4px 14px rgba(200, 16, 46, 0.35);
+  /* 机械字标:顶部高光 + 底部内阴影 + 外圈红晕,三段式造浮雕 */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26), inset 0 -2px 0 rgba(0, 0, 0, 0.28),
+    0 4px 14px rgba(200, 16, 46, 0.35);
 }
 
 .nba-sub {
@@ -206,13 +214,44 @@ body {
 /* ============ 会话流 ============ */
 
 .nba-thread {
+  --pad-x: 1rem;
+  --pad-t: 1.25rem;
+  --pad-b: 1.5rem;
   flex: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 1.25rem 1rem 1.5rem;
+  padding: var(--pad-t) var(--pad-x) var(--pad-b);
   overscroll-behavior: contain;
+}
+
+/* 上下边缘渐隐:内容滚出时"溶入"顶栏/输入区(贴边 sticky 伪元素,不吃布局) */
+.nba-thread::before,
+.nba-thread::after {
+  content: "";
+  position: sticky;
+  left: 0;
+  right: 0;
+  flex: 0 0 auto;
+  height: 1.1rem;
+  margin: 0 calc(-1 * var(--pad-x));
+  pointer-events: none;
+  z-index: 2;
+}
+
+.nba-thread::before {
+  top: 0;
+  margin-top: calc(-1 * var(--pad-t));
+  margin-bottom: calc(-1.1rem - 1rem); /* 抵消自身高度与后续 gap */
+  background: linear-gradient(180deg, var(--bg-0), rgba(10, 12, 16, 0));
+}
+
+.nba-thread::after {
+  bottom: 0;
+  margin-top: calc(-1.1rem - 1rem);
+  margin-bottom: calc(-1 * var(--pad-b));
+  background: linear-gradient(0deg, var(--bg-0), rgba(10, 12, 16, 0));
 }
 
 /* ============ 空态(开场秀) ============ */
@@ -225,12 +264,51 @@ body {
   align-items: center;
   gap: 1.1rem;
   padding: 1rem 0.5rem;
+  position: relative;
+}
+
+/* 开场跳球:中圈发丝环 + 中场线,极低透明度刻在球馆地板上 */
+.nba-empty::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(340px, 94vw);
+  height: min(340px, 94vw);
+  transform: translate(-50%, -54%);
+  pointer-events: none;
+  background:
+    /* 中场线(上下端渐隐) */
+    linear-gradient(
+      180deg,
+      transparent,
+      rgba(255, 255, 255, 0.05) 16%,
+      rgba(255, 255, 255, 0.05) 84%,
+      transparent
+    )
+      center / 1px 100% no-repeat,
+    /* 外环:中圈白线 */
+    radial-gradient(
+      circle,
+      transparent calc(50% - 1.5px),
+      rgba(255, 255, 255, 0.055) calc(50% - 0.5px),
+      rgba(255, 255, 255, 0.055) calc(50% + 0.5px),
+      transparent calc(50% + 1.5px)
+    ),
+    /* 内环:跳球圈,硬木琥珀一抹 */
+    radial-gradient(
+      circle,
+      transparent calc(29% - 1px),
+      rgba(200, 155, 90, 0.11) 29%,
+      transparent calc(29% + 1px)
+    );
 }
 
 .nba-empty-hero {
   display: flex;
   align-items: center;
   gap: 0.55rem;
+  position: relative;
 }
 
 .nba-empty-nba {
@@ -312,7 +390,9 @@ body {
   color: #fff;
   border-radius: var(--r-card) var(--r-card) 4px var(--r-card);
   padding: 0.55rem 0.85rem;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 8px 24px rgba(10, 20, 45, 0.5);
+  /* 蓝队球衣材质:顶部受光条 + 底缘暗缝 + 两段投影 */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -2px 0 rgba(0, 0, 0, 0.14),
+    0 2px 6px rgba(10, 20, 45, 0.42), 0 10px 28px rgba(10, 20, 45, 0.48);
 }
 
 .nba-msg-user p {
@@ -332,7 +412,9 @@ body {
 
 .nba-msg-bot {
   align-self: stretch;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 40%), var(--bg-2);
+  /* 记分台卡片材质:上缘短高光(28% 处收掉)+ 实底 */
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0) 28%),
+    var(--bg-2);
   border: 1px solid var(--line-1);
   border-radius: var(--r-card) var(--r-card) var(--r-card) 4px;
   padding: 0.7rem 0.9rem;
@@ -619,7 +701,8 @@ body {
 }
 
 .nba-md p {
-  margin: 0.35rem 0;
+  margin: 0.4rem 0;
+  text-wrap: pretty;
 }
 
 .nba-md ul,
@@ -636,16 +719,29 @@ body {
   color: var(--wood);
 }
 
-/* 标题:转播下沿短红杠(行内 lower-third 记号) */
+/* 标题:转播下沿短红杠(行内 lower-third 记号)+ 克制的级差 */
 .nba-md h1,
 .nba-md h2,
 .nba-md h3,
 .nba-md h4 {
-  margin: 0.8rem 0 0.35rem;
+  margin: 0.9rem 0 0.35rem; /* 标题上方留白多于下方,先聚后放 */
   padding-left: 0;
-  font-size: 1rem;
   font-weight: 700;
   line-height: 1.5;
+}
+
+.nba-md h1,
+.nba-md h2 {
+  font-size: 1.05rem;
+}
+
+.nba-md h3 {
+  font-size: 1rem;
+}
+
+.nba-md h4 {
+  font-size: 0.95rem;
+  color: var(--ink-1);
 }
 
 .nba-md h1::before,
@@ -709,6 +805,11 @@ body {
   font-weight: 600;
 }
 
+/* 数值列微加粗:box-score 扫读节奏 */
+.nba-md tbody td:not(:first-child) {
+  font-weight: 500;
+}
+
 .nba-md tbody tr:last-child td {
   border-bottom: none;
 }
@@ -725,8 +826,20 @@ body {
   background: rgba(200, 16, 46, 0.09);
 }
 
-.nba-md tbody tr:last-child {
-  background: rgba(200, 16, 46, 0.06); /* 总分/合计行:红底收尾 */
+/* 总分/合计行:语义识别(首格加粗或行头 th[scope=row]),不再误伤普通末行;
+   不支持 :has 的浏览器优雅退化为无高亮 */
+@supports selector(:has(strong)) {
+  .nba-md tbody tr:has(> td:first-child > strong:only-child),
+  .nba-md tbody tr:has(> th[scope="row"]) {
+    background: linear-gradient(90deg, rgba(200, 16, 46, 0.1), rgba(200, 16, 46, 0.04));
+  }
+
+  .nba-md tbody tr:has(> td:first-child > strong:only-child) td,
+  .nba-md tbody tr:has(> th[scope="row"]) td,
+  .nba-md tbody tr:has(> th[scope="row"]) th {
+    border-top: 1px solid rgba(200, 16, 46, 0.28); /* 合计行之上的红色合计线 */
+    color: var(--ink-1);
+  }
 }
 
 .nba-md strong {
@@ -764,10 +877,14 @@ body {
 .nba-md a {
   color: var(--blue-bright);
   text-decoration-color: rgba(77, 141, 240, 0.4);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 0.2s var(--ease-out), text-decoration-color 0.2s var(--ease-out);
 }
 
 .nba-md a:hover {
   color: #7db1f7;
+  text-decoration-color: rgba(125, 177, 247, 0.6);
 }
 
 .nba-md hr {
@@ -1295,7 +1412,9 @@ body {
   }
 
   .nba-thread {
-    padding: 1rem 0.75rem 1.25rem;
+    --pad-x: 0.75rem;
+    --pad-t: 1rem;
+    --pad-b: 1.25rem;
   }
 
   .nba-composer {
