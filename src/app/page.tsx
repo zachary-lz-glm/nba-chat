@@ -53,23 +53,16 @@ export default function Home() {
           <span className="nba-burger" aria-hidden="true"><i /><i /><i /></span>
         </button>
         <h1 aria-label="NBA Chat"><span className="nba-logo-nba">NBA</span><span>Chat</span></h1>
-        <span className="nba-sub">官方风格智能问答 · 数据实时查证</span>
         <button type="button" className="nba-icon-btn nba-settings-entry" onClick={() => setSettingsOpen(true)}>设置</button>
       </header>
       <div className="nba-thread">
         {chat.messages.length === 0 && (
           <div className="nba-empty">
-            <div className="nba-empty-hero" aria-hidden="true">
-              <span className="nba-empty-nba">NBA</span>
-              <span className="nba-empty-chat">Chat</span>
-            </div>
-            <p className="nba-empty-tag">赛程赛果、球员数据、历史纪录,<b>数据实时查证</b></p>
+            <h2 className="nba-empty-title">您好,我是 NBA Chat</h2>
+            <p className="nba-empty-tag">赛程赛果、球员数据、历史与战术,问到就查。</p>
             <div className="nba-suggest">
-              {SUGGESTIONS.map((s, i) => (
-                <button key={s} type="button" onClick={() => send(s)}>
-                  <span className="nba-suggest-idx" aria-hidden="true">{i + 1}</span>
-                  {s}
-                </button>
+              {SUGGESTIONS.map((s) => (
+                <button key={s} type="button" onClick={() => send(s)}>{s}</button>
               ))}
             </div>
           </div>

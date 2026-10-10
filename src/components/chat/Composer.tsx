@@ -15,7 +15,7 @@ export function Composer({ onSend, onStop, streaming }: {
           ref={ref}
           rows={2}
           value={text}
-          placeholder="问点 NBA:赛程、比分、球员数据、历史、战术……"
+          placeholder="问我任何 NBA 数据"
           onChange={(e) => setText(e.target.value)}
           onCompositionStart={() => setIme(true)}
           onCompositionEnd={() => setIme(false)}

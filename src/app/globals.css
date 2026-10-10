@@ -1,960 +1,520 @@
-@import "tailwindcss";
-
 /* ============================================================
-   NBA Chat · 转播图文风(broadcast graphics)
-   设计读法:深夜球馆底色 + NBA 官方红蓝点缀 + 硬木地板色细节
-   主题锁:仅深色。色彩一致性:红=强调/直播感,蓝=交互/焦点,
-   硬木琥珀=细节点缀。圆角体系:卡 14 / 控件 10 / 徽标全圆。
+   NBA Chat — 视觉系统 v3「克制」
+   公式:近黑画布分层 / 字重带 400-500 / 发丝线代替阴影 /
+        唯一强调色(提炼的 NBA 红)/ 宽阅读栏 / 零渐变零光晕
    ============================================================ */
 
 :root {
-  color-scheme: dark;
-
-  /* 底色层级(蓝调深夜球馆,拒绝纯黑) */
-  --bg-0: #0a0c10; /* 页面 */
-  --bg-1: #10131a; /* 顶栏 / 抽屉 / composer 带 */
-  --bg-2: #151924; /* 气泡 / 弹窗卡片 */
-  --bg-3: #1d2331; /* 悬停填充 / 徽标底 */
-
-  /* 发丝线 */
-  --line-1: rgba(255, 255, 255, 0.08);
-  --line-2: rgba(255, 255, 255, 0.14);
-
-  /* 文字层级 */
-  --ink-1: #f0f3f8;
-  --ink-2: #a7b0c0;
-  --ink-3: #7a8494;
-
-  /* 品牌色(NBA 官方红蓝 + 硬木琥珀) */
-  --red: #c8102e;
-  --red-bright: #e4243f;
-  --blue: #1d428a;
-  --blue-bright: #4d8df0;
-  --wood: #c89b5a; /* 硬木地板琥珀 */
-
-  /* 语义色 */
-  --ok: #34d399;
-  --err: #f87171;
-
-  /* 圆角体系(全套锁定) */
-  --r-card: 14px;
-  --r-ctl: 10px;
-  --r-chip: 999px;
-
-  /* 阴影(带底色蓝调,拒绝纯黑投影;两段式:近距接触 + 远距环境) */
-  --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 2px rgba(3, 6, 15, 0.55),
-    0 12px 34px rgba(3, 6, 15, 0.42);
-  --shadow-pop: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 6px rgba(3, 6, 15, 0.55),
-    0 24px 70px rgba(3, 6, 15, 0.6);
-
-  /* 动效曲线(全部自定贝塞尔,不用 linear / ease-in-out) */
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-smooth: cubic-bezier(0.32, 0.72, 0, 1);
-
-  --background: var(--bg-0);
-  --foreground: var(--ink-1);
+  --bg: #0d0d0f;                       /* 画布 */
+  --surface: #141417;                  /* 卡面:抽屉/用户气泡 */
+  --composer: #121215;                 /* 输入框:只比画布亮一档 */
+  --elevated: #1a1a1e;                 /* 弹层 */
+  --line: rgba(255, 255, 255, 0.07);   /* 发丝线 */
+  --line-strong: rgba(255, 255, 255, 0.13);
+  --text: #ececef;
+  --text-2: #a2a2ab;
+  --text-3: #6f6f79;
+  --accent: #b54a4a;                   /* 唯一强调色:全页同源的降饱和 NBA 红 */
+  --accent-hover: #c45c5c;
+  --accent-soft: rgba(181, 74, 74, 0.13);
+  --radius: 8px;
+  --radius-lg: 12px;
+  --col: 46rem;                        /* 阅读栏 736px */
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+* { box-sizing: border-box; }
 
-html,
-body {
-  height: 100%;
-}
-
-body {
-  /* 顶部一束球馆灯:深蓝光晕 */
-  background:
-    radial-gradient(1100px 460px at 50% -12%, rgba(29, 66, 138, 0.22), transparent 62%),
-    var(--bg-0);
-  color: var(--ink-1);
-  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI",
-    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.75;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* 键盘可达性:统一焦点环 */
+::selection { background: var(--accent-soft); color: var(--text); }
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
 :focus-visible {
-  outline: 2px solid var(--blue-bright);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
+  border-radius: 4px;
 }
 
-/* 浏览器原生表面一并入调:选区 / 光标色 */
-::selection {
-  background: rgba(200, 16, 46, 0.45);
-  color: #fff;
-}
+/* 细滚动条 */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
 
-.nba-composer textarea,
-.nba-dialog input,
-.nba-dialog select {
-  caret-color: var(--red-bright);
-}
-
-/* 滚动条(细 + 半透明,hover 提亮) */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.14);
-  border-radius: 8px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.28);
-  background-clip: padding-box;
-}
-.nba-thread,
-.nba-drawer-list,
-.nba-dialog,
-.nba-md pre {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
-}
-
-/* ============ 应用骨架 ============ */
+/* ---------- 应用骨架 ---------- */
 
 .nba-app {
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  max-width: 48rem;
-  margin: 0 auto;
-  background: transparent;
+  min-height: 100dvh;
+  background: var(--bg);
 }
 
-/* 宽屏下主栏如球场边线 */
-@media (min-width: 900px) {
-  .nba-app {
-    border-left: 1px solid var(--line-1);
-    border-right: 1px solid var(--line-1);
-  }
-}
-
-/* ============ 顶栏(score-bug 造型的频道条) ============ */
+/* ---------- 顶栏 ---------- */
 
 .nba-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.7rem 1rem;
-  border-bottom: 1px solid var(--line-1);
-  /* score-bug 上沿受光:冷色顶光 + 双层渐变底 + 内侧发丝高光 */
-  background:
-    radial-gradient(340px 90px at 14% 0%, rgba(29, 66, 138, 0.12), transparent 72%),
-    linear-gradient(180deg, rgba(21, 25, 34, 0.96), rgba(13, 16, 22, 0.96));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
-  position: relative;
-  flex-shrink: 0;
-}
-
-/* 转播下沿:红→蓝频道的发丝渐变线 */
-.nba-header::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 2px;
-  background: linear-gradient(90deg, var(--red) 0%, rgba(200, 16, 46, 0.35) 34%, rgba(77, 141, 240, 0.35) 66%, var(--blue) 100%);
-  pointer-events: none;
+  gap: 12px;
+  height: 52px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--line);
+  flex: none;
 }
 
 .nba-header h1 {
-  font-size: 1rem;
-  font-weight: 700;
   margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  letter-spacing: 0.01em;
+  align-items: baseline;
+  gap: 5px;
 }
 
-/* NBA 记分台字标:红块 + 白字,底部内阴影造机械感 */
-.nba-logo-nba,
-.nba-empty-nba {
-  display: inline-block;
-  background: linear-gradient(180deg, var(--red-bright), var(--red));
-  color: #fff;
-  padding: 0.14rem 0.45rem;
-  border-radius: 6px;
-  font-weight: 800;
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
-  /* 机械字标:顶部高光 + 底部内阴影 + 外圈红晕,三段式造浮雕 */
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26), inset 0 -2px 0 rgba(0, 0, 0, 0.28),
-    0 4px 14px rgba(200, 16, 46, 0.35);
-}
-
+.nba-logo-nba { color: var(--accent); font-weight: 500; }
 .nba-sub {
-  font-size: 0.7rem;
-  color: var(--ink-3);
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: none; /* v3:去「·」串联标语 */
 }
 
-@media (max-width: 560px) {
-  .nba-sub {
-    display: none;
-  }
+.nba-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  color: var(--text-2);
+  font-size: 13px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.nba-icon-btn:hover { background: rgba(255, 255, 255, 0.05); color: var(--text); }
+
+.nba-settings-entry {
+  width: auto;
+  padding: 0 10px;
+  margin-left: auto;
+  color: var(--text-2);
+  font-size: 13px;
+}
+.nba-settings-entry:hover { color: var(--text); }
+
+/* 顶栏与设置按钮之间把标题推到视觉中心 */
+.nba-header h1 { flex: 1; justify-content: center; }
+
+.nba-burger {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 3.5px;
+}
+.nba-burger i {
+  width: 14px;
+  height: 1px;
+  background: currentColor;
+  border-radius: 1px;
 }
 
-/* ============ 会话流 ============ */
+/* ---------- 对话主栏 ---------- */
 
 .nba-thread {
-  --pad-x: 1rem;
-  --pad-t: 1.25rem;
-  --pad-b: 1.5rem;
   flex: 1;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: var(--pad-t) var(--pad-x) var(--pad-b);
   overscroll-behavior: contain;
+  scroll-behavior: smooth;
 }
 
-/* 上下边缘渐隐:内容滚出时"溶入"顶栏/输入区(贴边 sticky 伪元素,不吃布局) */
-.nba-thread::before,
-.nba-thread::after {
-  content: "";
-  position: sticky;
-  left: 0;
-  right: 0;
-  flex: 0 0 auto;
-  height: 1.1rem;
-  margin: 0 calc(-1 * var(--pad-x));
-  pointer-events: none;
-  z-index: 2;
+.nba-thread > * {
+  max-width: var(--col);
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.nba-thread::before {
-  top: 0;
-  margin-top: calc(-1 * var(--pad-t));
-  margin-bottom: calc(-1.1rem - 1rem); /* 抵消自身高度与后续 gap */
-  background: linear-gradient(180deg, var(--bg-0), rgba(10, 12, 16, 0));
+.nba-chat,
+.nba-thread {
+  padding-left: 24px;
+  padding-right: 24px;
 }
 
-.nba-thread::after {
-  bottom: 0;
-  margin-top: calc(-1.1rem - 1rem);
-  margin-bottom: calc(-1 * var(--pad-b));
-  background: linear-gradient(0deg, var(--bg-0), rgba(10, 12, 16, 0));
-}
-
-/* ============ 空态(开场秀) ============ */
+/* ---------- 空态 ---------- */
 
 .nba-empty {
-  margin: auto;
-  text-align: center;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 1.1rem;
-  padding: 1rem 0.5rem;
-  position: relative;
+  align-items: flex-start;
+  gap: 44px;
+  padding: 11vh 0 48px;
 }
 
-/* 开场跳球:中圈发丝环 + 中场线,极低透明度刻在球馆地板上 */
-.nba-empty::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: min(340px, 94vw);
-  height: min(340px, 94vw);
-  transform: translate(-50%, -54%);
-  pointer-events: none;
-  background:
-    /* 中场线(上下端渐隐) */
-    linear-gradient(
-      180deg,
-      transparent,
-      rgba(255, 255, 255, 0.05) 16%,
-      rgba(255, 255, 255, 0.05) 84%,
-      transparent
-    )
-      center / 1px 100% no-repeat,
-    /* 外环:中圈白线 */
-    radial-gradient(
-      circle,
-      transparent calc(50% - 1.5px),
-      rgba(255, 255, 255, 0.055) calc(50% - 0.5px),
-      rgba(255, 255, 255, 0.055) calc(50% + 0.5px),
-      transparent calc(50% + 1.5px)
-    ),
-    /* 内环:跳球圈,硬木琥珀一抹 */
-    radial-gradient(
-      circle,
-      transparent calc(29% - 1px),
-      rgba(200, 155, 90, 0.11) 29%,
-      transparent calc(29% + 1px)
-    );
-}
-
-.nba-empty-hero {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  position: relative;
-}
-
-.nba-empty-nba {
-  font-size: 1rem;
-  padding: 0.28rem 0.7rem;
-}
-
-.nba-empty-chat {
-  font-size: 1.6rem;
-  font-weight: 800;
-  letter-spacing: 0.01em;
+.nba-empty-title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  color: var(--text);
 }
 
 .nba-empty-tag {
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--ink-2);
-  letter-spacing: 0.04em;
-}
-
-.nba-empty-tag b {
-  color: var(--wood);
-  font-weight: 600;
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text-3);
 }
 
 .nba-suggest {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  width: min(21rem, 100%);
+  gap: 0;
+  width: 100%;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* 建议问题:转播节目单样式(硬木琥珀序号,悬停点亮) */
 .nba-suggest button {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
+  display: block;
+  width: 100%;
   text-align: left;
-  background: var(--bg-2);
-  border: 1px solid var(--line-1);
-  border-radius: var(--r-ctl);
-  padding: 0.55rem 0.85rem;
-  color: var(--ink-2);
-  font-size: 0.875rem;
-  font-family: inherit;
-  cursor: pointer;
-  transition: color 0.25s var(--ease-out), background 0.25s var(--ease-out),
-    border-color 0.25s var(--ease-out), transform 0.25s var(--ease-out);
+  padding: 12px 2px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: color 0.15s ease, padding-left 0.15s ease, background 0.15s ease;
 }
+.nba-suggest button:hover { color: var(--text); background: rgba(255, 255, 255, 0.025); }
 
-.nba-suggest button:hover {
-  color: var(--ink-1);
-  background: var(--bg-3);
-  border-color: var(--line-2);
-  transform: translateX(2px);
-}
-
-.nba-suggest button:hover .nba-suggest-idx {
-  color: var(--red-bright);
-}
-
-/* 节目单序号:等宽数字,琥珀转红 */
-.nba-suggest-idx {
-  font-variant-numeric: tabular-nums;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--wood);
-  letter-spacing: 0.05em;
-  transition: color 0.25s var(--ease-out);
-  flex-shrink: 0;
-}
-
-/* ============ 消息 ============ */
+/* ---------- 消息 ---------- */
 
 .nba-msg-user {
-  align-self: flex-end;
-  max-width: 85%;
-  background: linear-gradient(160deg, #2a57b8, var(--blue));
-  color: #fff;
-  border-radius: var(--r-card) var(--r-card) 4px var(--r-card);
-  padding: 0.55rem 0.85rem;
-  /* 蓝队球衣材质:顶部受光条 + 底缘暗缝 + 两段投影 */
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -2px 0 rgba(0, 0, 0, 0.14),
-    0 2px 6px rgba(10, 20, 45, 0.42), 0 10px 28px rgba(10, 20, 45, 0.48);
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
 .nba-msg-user p {
   margin: 0;
+  max-width: 85%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 14.5px;
+  line-height: 1.65;
   white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
-/* 助手消息组:气泡 + 悬停元信息行 */
 .nba-msg-assist {
-  align-self: stretch;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  max-width: 100%;
+  margin-top: 28px;
 }
 
-.nba-msg-bot {
-  align-self: stretch;
-  /* 记分台卡片材质:上缘短高光(28% 处收掉)+ 实底 */
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0) 28%),
-    var(--bg-2);
-  border: 1px solid var(--line-1);
-  border-radius: var(--r-card) var(--r-card) var(--r-card) 4px;
-  padding: 0.7rem 0.9rem;
-  overflow-wrap: anywhere;
-  box-shadow: var(--shadow-card);
-}
+.nba-msg-bot { font-size: 15px; line-height: 1.75; }
 
-/* 消息元信息行:复制按钮 + 耗时 */
-.nba-msg-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0.3rem 0.15rem 0;
-  min-height: 1.4rem;
-}
-
-.nba-copy {
-  border: none;
-  background: none;
-  color: var(--ink-3);
-  font-size: 0.7rem;
-  font-family: inherit;
-  padding: 0.15rem 0.45rem;
-  border-radius: 6px;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.25s var(--ease-out), color 0.25s var(--ease-out),
-    background 0.25s var(--ease-out);
-}
-
-.nba-msg-assist:hover .nba-copy,
-.nba-msg-assist:focus-within .nba-copy,
-.nba-copy.copied {
-  opacity: 1;
-}
-
-.nba-copy:hover {
-  color: var(--ink-1);
-  background: var(--bg-3);
-}
-
-.nba-copy.copied {
-  color: var(--ok);
-  cursor: default;
-}
-
-/* 触屏无 hover:常态微显 */
-@media (hover: none) {
-  .nba-copy {
-    opacity: 0.55;
-  }
-}
-
-.nba-elapsed {
-  font-size: 0.68rem;
-  color: var(--ink-3);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
-}
-
-/* ============ 工具状态条 ============ */
-
-.nba-tools {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  flex-wrap: wrap;
-  margin: 0 0 0.55rem;
-  font-size: 0.72rem;
-  transition: opacity 0.6s var(--ease-smooth);
-}
-
-.nba-tools.done {
-  opacity: 0.65;
-  margin-bottom: 0.45rem;
-}
-
-.nba-tool-chip {
-  position: relative;
-  overflow: hidden;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  border-radius: var(--r-chip);
-  padding: 0.18rem 0.6rem;
-  background: var(--bg-3);
-  border: 1px solid var(--line-1);
-  color: var(--ink-2);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-}
-
-.nba-tools.running .nba-tool-chip {
-  color: var(--ink-1);
-  border-color: rgba(200, 16, 46, 0.45);
-  background: linear-gradient(180deg, rgba(200, 16, 46, 0.16), rgba(200, 16, 46, 0.08));
-}
-
-/* 直播脉冲点(仅运行中) */
-.nba-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--red-bright);
-  box-shadow: 0 0 0 3px rgba(228, 36, 63, 0.18);
-  display: inline-block;
-  flex-shrink: 0;
-}
-
-.nba-tools.done .nba-tool-chip {
-  background: transparent;
-  color: var(--ink-3);
-}
-
-/* ============ 流式光标 & 输入中 ============ */
-
-.nba-msg-bot.streaming .nba-md > :last-child::after {
+/* 流式光标:细竖线,不喧哗 */
+.nba-msg-bot.streaming .nba-md > *:last-child::after {
   content: "";
   display: inline-block;
   width: 2px;
-  height: 0.95em;
-  margin-left: 3px;
-  vertical-align: -0.12em;
-  background: var(--red-bright);
-  animation: nba-caret 1s steps(2, start) infinite;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: var(--accent);
+  animation: nba-caret 1s steps(2) infinite;
 }
+@keyframes nba-caret { 50% { opacity: 0; } }
 
+/* 等待首 token */
 .nba-typing {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 0.3rem 0;
+  padding: 6px 0;
+}
+.nba-typing i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-3);
+  animation: nba-bounce 1.2s ease-in-out infinite;
+}
+.nba-typing i:nth-child(2) { animation-delay: 0.15s; }
+.nba-typing i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes nba-bounce { 0%, 60%, 100% { transform: none; opacity: 0.5; } 30% { transform: translateY(-3px); opacity: 1; } }
+
+/* 消息底部:复制 / 耗时 */
+.nba-msg-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.nba-msg-assist:hover .nba-msg-meta,
+.nba-msg-meta:focus-within { opacity: 1; }
+
+.nba-copy {
+  font-size: 12px;
+  color: var(--text-3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+}
+.nba-copy:hover { color: var(--text); }
+.nba-copy.copied { color: var(--accent); }
+
+.nba-elapsed { font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+
+/* ---------- 工具查证状态条 ---------- */
+
+.nba-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0 0 10px;
 }
 
-.nba-typing i {
+.nba-tool-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.nba-dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--ink-3);
+  background: var(--accent);
+  animation: nba-pulse 1.6s ease-in-out infinite;
+}
+@keyframes nba-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.nba-tools:not(.running) .nba-dot { animation: none; opacity: 0.55; }
+
+/* ---------- Markdown 正文 ---------- */
+
+.nba-md > *:first-child { margin-top: 0; }
+.nba-md > *:last-child { margin-bottom: 0; }
+
+.nba-md p { margin: 10px 0; }
+.nba-md h1, .nba-md h2, .nba-md h3, .nba-md h4 {
+  margin: 22px 0 8px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.nba-md h1 { font-size: 18px; }
+.nba-md h2 { font-size: 16.5px; }
+.nba-md h3 { font-size: 15.5px; }
+.nba-md h4 { font-size: 15px; }
+
+.nba-md strong, .nba-md b {
+  font-weight: 500;
+  color: #fff;
 }
 
-/* ============ 错误态(技术犯规卡) ============ */
+.nba-md a { color: var(--accent-hover); text-decoration: none; border-bottom: 1px solid rgba(181, 74, 74, 0.35); }
+.nba-md a:hover { color: #fff; border-bottom-color: #fff; }
 
-/* 错误卡:红上沿规则线(与顶栏/表头同语系的"边界红") */
-.nba-error {
-  align-self: stretch;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  background: linear-gradient(180deg, rgba(200, 16, 46, 0.14), rgba(200, 16, 46, 0.07)), var(--bg-2);
-  border: 1px solid rgba(228, 36, 63, 0.3);
-  border-top: 2px solid var(--red);
-  border-radius: var(--r-ctl);
-  padding: 0.6rem 0.85rem;
-  font-size: 0.85rem;
-  color: var(--ink-1);
+.nba-md ul, .nba-md ol { margin: 10px 0; padding-left: 1.4em; }
+.nba-md li { margin: 4px 0; }
+.nba-md li::marker { color: var(--text-3); }
+
+.nba-md blockquote {
+  margin: 12px 0;
+  padding: 2px 0 2px 14px;
+  border-left: 2px solid var(--line-strong);
+  color: var(--text-2);
 }
 
-.nba-error button {
-  background: rgba(255, 255, 255, 0.1);
-  color: inherit;
-  border: 1px solid var(--line-2);
-  border-radius: var(--r-chip);
-  padding: 0.25rem 0.9rem;
-  font-family: inherit;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: background 0.25s var(--ease-out), transform 0.2s var(--ease-out);
+.nba-md hr { border: none; border-top: 1px solid var(--line); margin: 20px 0; }
+
+.nba-md code {
+  font-family: var(--mono);
+  font-size: 0.86em;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 1px 5px;
 }
 
-.nba-error button:hover {
-  background: rgba(255, 255, 255, 0.18);
+.nba-md pre {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  overflow-x: auto;
+  margin: 12px 0;
+}
+.nba-md pre code { background: none; border: none; padding: 0; font-size: 12.5px; line-height: 1.7; }
+
+/* 表格:转播基因只留一条红线 */
+.nba-md table {
+  width: 100%;
+  margin: 14px 0;
+  border-collapse: collapse;
+  font-size: 13px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  display: block;
+  overflow-x: auto;
 }
 
-/* ============ 输入区(composer 双层嵌腔) ============ */
+.nba-md thead th {
+  text-align: left;
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--text-3);
+  letter-spacing: 0.02em;
+  padding: 0 12px 7px 0;
+  border-bottom: 1px solid rgba(181, 74, 74, 0.5);
+  white-space: nowrap;
+}
+
+.nba-md tbody td {
+  padding: 7px 12px 7px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-2);
+}
+.nba-md tbody td strong { color: var(--text); }
+
+/* 合计/小结行:语义化(首个单元格加粗引导) */
+.nba-md tbody tr:has(> td:first-child > strong:only-child) td {
+  border-top: 1px solid var(--line-strong);
+  color: var(--text);
+}
+
+/* ---------- 输入区 ---------- */
 
 .nba-composer {
-  flex-shrink: 0;
-  padding: 0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--line-1);
-  background: linear-gradient(180deg, rgba(16, 19, 26, 0.6), var(--bg-1));
+  flex: none;
+  padding: 12px 24px calc(16px + env(safe-area-inset-bottom));
 }
 
 .nba-composer-shell {
+  max-width: var(--col);
+  margin: 0 auto;
   display: flex;
   align-items: flex-end;
-  gap: 0.5rem;
-  /* 嵌腔:微抬升的上表面 + 实底 */
-  background: linear-gradient(180deg, rgba(26, 31, 42, 0.88), var(--bg-0) 46%);
-  border: 1px solid var(--line-2);
-  border-radius: var(--r-card);
-  padding: 0.35rem 0.35rem 0.35rem 0.8rem;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 2px rgba(3, 6, 15, 0.5),
-    0 12px 32px rgba(3, 6, 15, 0.38);
-  transition: border-color 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+  gap: 10px;
+  align-items: center;
+  background: var(--composer);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 12px 12px 12px 16px;
+  transition: border-color 0.15s ease;
 }
+.nba-composer-shell:focus-within { border-color: var(--line-strong); }
 
-.nba-composer-shell:focus-within {
-  border-color: rgba(228, 36, 63, 0.55);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 0 0 3px rgba(200, 16, 46, 0.14),
-    0 1px 2px rgba(3, 6, 15, 0.5), 0 12px 36px rgba(3, 6, 15, 0.42);
-}
-
-.nba-composer textarea {
+.nba-composer-shell textarea {
   flex: 1;
-  resize: none;
-  background: transparent;
-  color: inherit;
+  background: none;
   border: none;
   outline: none;
-  padding: 0.55rem 0;
-  font: inherit;
-  line-height: 1.55;
-  min-width: 0;
-}
-
-.nba-composer textarea::placeholder {
-  color: var(--ink-3);
-}
-
-/* 发送:直播红胶囊;停止:中性 + 红色停止点 */
-.nba-send,
-.nba-stop {
-  border: none;
-  border-radius: var(--r-chip);
-  padding: 0.55rem 1.2rem;
-  min-height: 2.5rem;
+  resize: none;
+  color: var(--text);
   font-family: inherit;
-  font-size: 0.875rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: transform 0.2s var(--ease-out), box-shadow 0.25s var(--ease-out),
-    opacity 0.25s var(--ease-out), background 0.25s var(--ease-out);
+  font-size: 14.5px;
+  line-height: 1.6;
+  max-height: 160px;
+  padding: 4px 0;
 }
+.nba-composer-shell textarea::placeholder { color: var(--text-3); }
 
 .nba-send {
-  background: linear-gradient(180deg, var(--red-bright), var(--red));
+  flex: none;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 6px;
+  background: var(--accent);
   color: #fff;
-  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25), 0 6px 18px rgba(200, 16, 46, 0.35);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  transition: background 0.15s ease, transform 0.1s ease;
 }
-
-.nba-send:hover:not(:disabled) {
-  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25), 0 8px 24px rgba(200, 16, 46, 0.5);
-}
-
-.nba-send:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
+.nba-send:hover:not(:disabled) { background: var(--accent-hover); }
+.nba-send:active:not(:disabled) { transform: scale(0.97); }
+.nba-send:disabled { background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line); color: var(--text-3); cursor: default; }
 
 .nba-stop {
-  background: var(--bg-3);
-  color: var(--ink-1);
-  border: 1px solid var(--line-2);
+  flex: none;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 7px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 6px;
+  border: 1px solid var(--line-strong);
+  color: var(--text-2);
+  font-size: 13px;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
-
-.nba-stop:hover {
-  background: rgba(200, 16, 46, 0.18);
-  border-color: rgba(228, 36, 63, 0.4);
-}
-
-.nba-send:not(:disabled):active,
-.nba-stop:active {
-  transform: scale(0.97);
-}
+.nba-stop:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.25); }
 
 .nba-stop-icon {
   width: 8px;
   height: 8px;
   border-radius: 2px;
-  background: var(--red-bright);
-  display: inline-block;
-}
-
-/* ============ Markdown 正文 ============ */
-
-.nba-md {
-  font-size: 0.925rem;
-  line-height: 1.75;
-}
-
-.nba-md p {
-  margin: 0.4rem 0;
-  text-wrap: pretty;
-}
-
-.nba-md ul,
-.nba-md ol {
-  margin: 0.35rem 0;
-  padding-left: 1.4rem;
-}
-
-.nba-md li {
-  margin: 0.2rem 0;
-}
-
-.nba-md li::marker {
-  color: var(--wood);
-}
-
-/* 标题:转播下沿短红杠(行内 lower-third 记号)+ 克制的级差 */
-.nba-md h1,
-.nba-md h2,
-.nba-md h3,
-.nba-md h4 {
-  margin: 0.9rem 0 0.35rem; /* 标题上方留白多于下方,先聚后放 */
-  padding-left: 0;
-  font-weight: 700;
-  line-height: 1.5;
-}
-
-.nba-md h1,
-.nba-md h2 {
-  font-size: 1.05rem;
-}
-
-.nba-md h3 {
-  font-size: 1rem;
-}
-
-.nba-md h4 {
-  font-size: 0.95rem;
-  color: var(--ink-1);
-}
-
-.nba-md h1::before,
-.nba-md h2::before,
-.nba-md h3::before,
-.nba-md h4::before {
-  content: "";
-  display: inline-block;
-  width: 0.55em;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--red);
-  margin-right: 0.45em;
-  vertical-align: 0.24em;
-}
-
-/* 转播风 box-score 表格:红表头线 + 斑马行 + 等宽数字 */
-.nba-md table {
-  display: block;
-  border-collapse: collapse;
-  margin: 0.7rem 0;
-  font-size: 0.84rem;
-  max-width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  border: 1px solid var(--line-1);
-  border-radius: var(--r-ctl);
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
-}
-
-.nba-md thead th {
-  padding: 0.4rem 0.7rem;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--ink-2);
-  text-align: right;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-  border-bottom: 2px solid var(--red);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.nba-md thead th:first-child {
-  text-align: left;
-}
-
-.nba-md tbody td {
-  padding: 0.34rem 0.7rem;
-  text-align: right;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-  color: var(--ink-1);
-  border-bottom: 1px solid var(--line-1);
-}
-
-.nba-md tbody td:first-child {
-  text-align: left;
-  color: var(--ink-2);
-  font-weight: 600;
-}
-
-/* 数值列微加粗:box-score 扫读节奏 */
-.nba-md tbody td:not(:first-child) {
-  font-weight: 500;
-}
-
-.nba-md tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.nba-md tbody tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.nba-md tbody tr {
-  transition: background 0.2s var(--ease-out);
-}
-
-.nba-md tbody tr:hover {
-  background: rgba(200, 16, 46, 0.09);
-}
-
-/* 总分/合计行:语义识别(首格加粗或行头 th[scope=row]),不再误伤普通末行;
-   不支持 :has 的浏览器优雅退化为无高亮 */
-@supports selector(:has(strong)) {
-  .nba-md tbody tr:has(> td:first-child > strong:only-child),
-  .nba-md tbody tr:has(> th[scope="row"]) {
-    background: linear-gradient(90deg, rgba(200, 16, 46, 0.1), rgba(200, 16, 46, 0.04));
-  }
-
-  .nba-md tbody tr:has(> td:first-child > strong:only-child) td,
-  .nba-md tbody tr:has(> th[scope="row"]) td,
-  .nba-md tbody tr:has(> th[scope="row"]) th {
-    box-shadow: inset 0 1px 0 rgba(200, 16, 46, 0.3); /* 合计线:inset 影不参与边框合并 */
-    color: var(--ink-1);
-  }
-}
-
-.nba-md strong {
-  color: #fff;
-}
-
-.nba-md code {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 5px;
-  padding: 0.1rem 0.35rem;
-  font-family: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  font-size: 0.85em;
-}
-
-.nba-md pre {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--line-1);
-  border-radius: var(--r-ctl);
-  padding: 0.6rem 0.8rem;
-  overflow-x: auto;
-}
-
-.nba-md pre code {
-  background: none;
-  padding: 0;
-}
-
-.nba-md blockquote {
-  /* 引语:1px 硬木发丝线(粗侧标是 AI 味),斜体感由缩进与降级色承担 */
-  border-left: 1px solid rgba(200, 155, 90, 0.55);
-  margin: 0.45rem 0;
-  padding-left: 0.75rem;
-  color: var(--ink-2);
-}
-
-.nba-md a {
-  color: var(--blue-bright);
-  text-decoration-color: rgba(77, 141, 240, 0.4);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
-  transition: color 0.2s var(--ease-out), text-decoration-color 0.2s var(--ease-out);
-}
-
-.nba-md a:hover {
-  color: #7db1f7;
-  text-decoration-color: rgba(125, 177, 247, 0.6);
-}
-
-.nba-md hr {
-  border: none;
-  border-top: 1px solid var(--line-1);
-  margin: 0.8rem 0;
-}
-
-/* ============ 会话抽屉 ============ */
-
-.nba-icon-btn {
-  background: var(--bg-2);
-  border: 1px solid var(--line-1);
-  color: var(--ink-2);
-  border-radius: var(--r-ctl);
-  padding: 0.3rem 0.6rem;
-  font-size: 0.8rem;
-  font-family: inherit;
-  cursor: pointer;
-  flex-shrink: 0;
-  align-self: center;
-  transition: color 0.25s var(--ease-out), background 0.25s var(--ease-out),
-    border-color 0.25s var(--ease-out);
-}
-
-.nba-icon-btn:hover {
-  background: var(--bg-3);
-  color: var(--ink-1);
-  border-color: var(--line-2);
-}
-
-/* 汉堡线(三横,悬停聚拢) */
-.nba-burger {
-  display: inline-flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 2px 0;
-}
-
-.nba-burger i {
-  width: 14px;
-  height: 1.5px;
-  border-radius: 1px;
   background: currentColor;
-  display: block;
-  transition: transform 0.3s var(--ease-smooth);
 }
 
-.nba-icon-btn:hover .nba-burger i:nth-child(1) {
-  transform: translateY(-0.5px);
-}
+/* ---------- 错误 ---------- */
 
-.nba-icon-btn:hover .nba-burger i:nth-child(3) {
-  transform: translateY(0.5px);
+.nba-error {
+  margin-top: 20px;
+  padding: 12px 16px;
+  border: 1px solid rgba(181, 74, 74, 0.4);
+  border-radius: var(--radius);
+  font-size: 13.5px;
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
+.nba-error button {
+  flex: none;
+  color: var(--accent-hover);
+  font-size: 13px;
+  padding: 2px 8px;
+  border: 1px solid rgba(181, 74, 74, 0.4);
+  border-radius: 6px;
+}
+.nba-error button:hover { color: #fff; border-color: var(--accent-hover); }
 
-.nba-settings-entry {
-  margin-left: auto;
-}
+/* ---------- 会话抽屉 ---------- */
 
 .nba-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(4, 6, 12, 0.55);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.55);
   z-index: 40;
+  animation: nba-fade 0.16s ease;
 }
 
 .nba-drawer {
@@ -962,538 +522,213 @@ body {
   top: 0;
   left: 0;
   bottom: 0;
-  width: min(21rem, 88vw);
-  background: var(--bg-1);
-  border-right: 1px solid var(--line-2);
-  z-index: 41;
+  width: 300px;
+  max-width: 88vw;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  z-index: 50;
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-pop);
+  animation: nba-slide 0.18s ease;
 }
 
-@media (max-width: 480px) {
-  .nba-drawer {
-    width: 100vw;
-    border-right: none;
-  }
-}
+@keyframes nba-slide { from { transform: translateX(-12px); opacity: 0; } }
+@keyframes nba-fade { from { opacity: 0; } }
 
 .nba-drawer-head {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.8rem 0.9rem;
-  border-bottom: 1px solid var(--line-1);
-  position: relative;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  flex: none;
 }
 
-.nba-drawer-head::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 2px;
-  background: linear-gradient(90deg, var(--red), rgba(200, 16, 46, 0));
-}
+.nba-drawer-title { font-size: 13px; color: var(--text-2); font-weight: 400; }
 
-.nba-drawer-title {
-  font-weight: 700;
-  font-size: 0.95rem;
-  margin-right: auto;
-  letter-spacing: 0.02em;
+.nba-btn {
+  font-size: 13px;
+  color: var(--text-2);
+  padding: 4px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
-
-.nba-drawer-head button {
-  background: var(--bg-3);
-  color: var(--ink-1);
-  border: 1px solid var(--line-1);
-  border-radius: var(--r-chip);
-  padding: 0.28rem 0.7rem;
-  font-size: 0.78rem;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background 0.25s var(--ease-out), border-color 0.25s var(--ease-out);
-}
-
-.nba-drawer-head button:hover {
-  background: rgba(200, 16, 46, 0.2);
-  border-color: rgba(228, 36, 63, 0.4);
-}
+.nba-btn:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.25); }
 
 .nba-drawer-list {
   flex: 1;
   overflow-y: auto;
-  padding: 0.6rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.nba-drawer-empty {
-  color: var(--ink-3);
-  font-size: 0.85rem;
-  text-align: center;
-  margin-top: 3rem;
+  padding: 8px;
 }
 
 .nba-session-item {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  border-radius: var(--r-ctl);
-  padding: 0.25rem 0.3rem 0.25rem 0.6rem;
-  border: 1px solid transparent;
-  transition: background 0.25s var(--ease-out), border-color 0.25s var(--ease-out);
-}
-
-.nba-session-item:hover {
-  background: var(--bg-2);
-}
-
-/* 当前会话:直播蓝底高亮(标题点亮,不用侧标) */
-.nba-session-item.active {
-  background: rgba(29, 66, 138, 0.26);
-  border-color: rgba(77, 141, 240, 0.3);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.nba-session-item.active .nba-session-title {
-  color: #cfe0fa;
-}
-
-.nba-session-main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  background: none;
-  border: none;
-  color: inherit;
-  cursor: pointer;
+  gap: 10px;
+  width: 100%;
   text-align: left;
-  padding: 0.3rem 0;
-  font-family: inherit;
+  padding: 9px 10px;
+  border-radius: 6px;
+  color: var(--text-2);
+  transition: background 0.12s ease, color 0.12s ease;
 }
+.nba-session-item:hover { background: rgba(255, 255, 255, 0.04); color: var(--text); }
+.nba-session-item.active { background: rgba(255, 255, 255, 0.05); color: var(--text); }
 
+.nba-session-main { flex: 1; min-width: 0; }
 .nba-session-title {
-  font-size: 0.875rem;
-  max-width: 100%;
+  font-size: 13.5px;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
-
-.nba-session-time {
-  font-size: 0.68rem;
-  color: var(--ink-3);
-  font-variant-numeric: tabular-nums;
-}
+.nba-session-time { font-size: 11.5px; color: var(--text-3); }
 
 .nba-session-del {
-  background: none;
-  border: none;
-  color: var(--ink-3);
-  cursor: pointer;
-  font-size: 0.7rem;
-  font-family: inherit;
-  border-radius: 6px;
-  padding: 0.3rem 0.5rem;
-  flex-shrink: 0;
-  transition: color 0.25s var(--ease-out), background 0.25s var(--ease-out);
+  flex: none;
+  font-size: 11.5px;
+  color: var(--text-3);
+  padding: 3px 7px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+.nba-session-item:hover .nba-session-del { opacity: 1; }
+.nba-session-del:hover { color: var(--accent-hover); }
+
+.nba-drawer-empty {
+  padding: 32px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-3);
 }
 
-.nba-session-del:hover {
-  color: var(--err);
-  background: rgba(248, 113, 113, 0.1);
-}
+/* ---------- 设置弹窗 ---------- */
 
-.nba-session-del.confirm {
-  color: #fff;
-  background: var(--red);
-}
-
-/* ============ 设置弹窗 ============ */
-
-.nba-dialog-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(4, 6, 12, 0.6);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-}
+.nba-dialog-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); z-index: 60; animation: nba-fade 0.16s ease; }
 
 .nba-dialog {
-  width: min(26rem, 100%);
-  max-height: 88dvh;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 48px);
   overflow-y: auto;
-  background: var(--bg-2);
-  border: 1px solid var(--line-2);
-  border-radius: var(--r-card);
-  padding: 1.35rem 1.35rem 1.1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-  box-shadow: var(--shadow-pop);
+  background: var(--elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  z-index: 61;
 }
 
-.nba-dialog h2 {
-  font-size: 1rem;
-  margin: 0;
-  display: flex;
+.nba-dialog h2 { margin: 0 0 16px; font-size: 15px; font-weight: 500; letter-spacing: -0.01em; }
+
+.nba-dialog-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  border-radius: 6px;
+  color: var(--text-3);
+  font-size: 14px;
 }
+.nba-dialog-close:hover { color: var(--text); background: rgba(255, 255, 255, 0.05); }
 
-.nba-dialog h2::before {
-  content: "";
-  width: 4px;
-  height: 1em;
-  border-radius: 2px;
-  background: linear-gradient(180deg, var(--red-bright), var(--red));
-}
+.nba-dialog label { display: block; font-size: 12.5px; color: var(--text-3); margin: 14px 0 6px; }
 
-.nba-dialog label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  font-size: 0.78rem;
-  color: var(--ink-2);
-  letter-spacing: 0.03em;
-}
-
-.nba-dialog input,
-.nba-dialog select {
-  background: var(--bg-0);
-  color: var(--ink-1);
-  border: 1px solid var(--line-2);
-  border-radius: var(--r-ctl);
-  padding: 0.5rem 0.65rem;
-  font: inherit;
-  font-size: 0.875rem;
-  transition: border-color 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
-}
-
-.nba-dialog input:focus,
-.nba-dialog select:focus {
+.nba-dialog input, .nba-dialog select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13.5px;
+  padding: 8px 10px;
   outline: none;
-  border-color: var(--blue-bright);
-  box-shadow: 0 0 0 3px rgba(77, 141, 240, 0.16);
+  transition: border-color 0.15s ease;
 }
+.nba-dialog input:focus, .nba-dialog select:focus { border-color: var(--line-strong); }
 
-.nba-mode-fieldset {
-  border: 1px solid var(--line-2);
-  border-radius: var(--r-ctl);
-  padding: 0.6rem;
+/* 三档模式选择 */
+.nba-mode-fieldset { border: none; margin: 0; padding: 0; }
+.nba-mode {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 8px;
+  margin-top: 8px;
 }
-
-.nba-mode-fieldset legend {
-  font-size: 0.78rem;
-  color: var(--ink-2);
-  letter-spacing: 0.03em;
-  padding: 0 0.3rem;
-}
-
 .nba-mode-option {
   display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.45rem 0.5rem;
-  border: 1px solid transparent;
-  border-radius: calc(var(--r-ctl) - 2px);
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
   cursor: pointer;
-  transition: border-color 0.25s var(--ease-out), background 0.25s var(--ease-out);
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
+.nba-mode-option:hover { border-color: var(--line-strong); }
+.nba-mode-option.selected { border-color: rgba(181, 74, 74, 0.55); background: var(--accent-soft); }
+.nba-mode-option input { width: auto; margin-top: 4px; accent-color: var(--accent); }
+.nba-mode-option .nba-mode-label { font-size: 13.5px; color: var(--text); }
+.nba-mode-option .nba-mode-desc { font-size: 12px; color: var(--text-3); margin-top: 2px; }
 
-.nba-mode-option:hover {
-  background: var(--bg-3);
+.nba-test-result {
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: var(--text-3);
+  min-height: 18px;
 }
-
-.nba-mode-option.active {
-  border-color: var(--blue-bright);
-  background: rgba(77, 141, 240, 0.08);
-}
-
-.nba-mode-option input {
-  margin-top: 0.2rem;
-  accent-color: var(--blue-bright);
-}
-
-.nba-mode-option span {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  font-size: 0.8rem;
-  color: var(--ink-1);
-}
-
-.nba-mode-option small {
-  color: var(--ink-2);
-  font-size: 0.72rem;
-}
+.nba-test-result.ok { color: #6dbb87; }
+.nba-test-result.fail { color: var(--accent-hover); }
 
 .nba-dialog-actions {
   display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
 }
 
-.nba-btn {
-  background: var(--bg-3);
-  color: var(--ink-1);
-  border: 1px solid var(--line-1);
-  border-radius: var(--r-chip);
-  padding: 0.5rem 1rem;
-  font-size: 0.82rem;
-  font-family: inherit;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  cursor: pointer;
-  transition: background 0.25s var(--ease-out), border-color 0.25s var(--ease-out),
-    transform 0.2s var(--ease-out), opacity 0.25s var(--ease-out);
-}
-
-.nba-btn:hover:not(:disabled) {
-  border-color: var(--line-2);
-}
-
-.nba-btn:active:not(:disabled) {
-  transform: scale(0.97);
-}
-
-.nba-btn.primary {
-  background: linear-gradient(180deg, var(--red-bright), var(--red));
-  border-color: transparent;
+.nba-btn-primary {
+  height: 32px;
+  padding: 0 16px;
+  border-radius: 6px;
+  background: var(--accent);
   color: #fff;
-  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25), 0 6px 18px rgba(200, 16, 46, 0.3);
+  font-size: 13px;
+  transition: background 0.15s ease;
+}
+.nba-btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+.nba-btn-primary:disabled { opacity: 0.35; cursor: default; }
+
+/* ---------- 移动端 ---------- */
+
+@media (max-width: 640px) {
+  .nba-header { height: 48px; padding: 0 12px; }
+  .nba-chat, .nba-thread, .nba-composer { padding-left: 16px; padding-right: 16px; }
+  .nba-msg-user p { max-width: 92%; }
+  .nba-empty { padding-top: 8vh; }
+  .nba-drawer { width: 100vw; max-width: 100vw; border-right: none; }
+  .nba-session-del { opacity: 1; }
+  .nba-msg-meta { opacity: 1; } /* 触屏无 hover */
 }
 
-.nba-btn.primary:hover:not(:disabled) {
-  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25), 0 8px 24px rgba(200, 16, 46, 0.45);
-}
+/* ---------- 减弱动效 ---------- */
 
-.nba-btn.ghost {
-  background: none;
-  border: 1px solid var(--line-2);
-  color: var(--ink-2);
-}
-
-.nba-btn:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.nba-test-result {
-  margin: 0;
-  font-size: 0.78rem;
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-}
-
-.nba-test-result.ok {
-  color: var(--ok);
-}
-
-.nba-test-result.fail {
-  color: var(--err);
-}
-
-.nba-dialog-close {
-  background: none;
-  border: none;
-  color: var(--ink-3);
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-family: inherit;
-  padding: 0.25rem 0;
-  align-self: flex-end;
-  transition: color 0.25s var(--ease-out);
-}
-
-.nba-dialog-close:hover {
-  color: var(--ink-1);
-}
-
-/* ============ 动效(全部仅在允许动效时启用) ============ */
-
-/* 消息入场 */
-@keyframes nba-msg-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-}
-
-/* 流式光标 */
-@keyframes nba-caret {
-  50% {
-    opacity: 0;
-  }
-}
-
-/* 直播脉冲点 */
-@keyframes nba-pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(228, 36, 63, 0.45);
-  }
-  70% {
-    box-shadow: 0 0 0 6px rgba(228, 36, 63, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(228, 36, 63, 0);
-  }
-}
-
-/* 状态徽标微光扫过 */
-@keyframes nba-sweep {
-  from {
-    transform: translateX(-120%);
-  }
-  to {
-    transform: translateX(220%);
-  }
-}
-
-/* 输入中三点 */
-@keyframes nba-dot-jump {
-  0%,
-  60%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.35;
-  }
-  30% {
-    transform: translateY(-4px);
-    opacity: 1;
-  }
-}
-
-/* 抽屉 / 弹窗入场 */
-@keyframes nba-drawer-in {
-  from {
-    transform: translateX(-24px);
-    opacity: 0;
-  }
-}
-
-@keyframes nba-pop-in {
-  from {
-    transform: translateY(10px) scale(0.97);
-    opacity: 0;
-  }
-}
-
-/* 耗时数字浮现 */
-@keyframes nba-fade-in {
-  from {
-    opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .nba-msg-user,
-  .nba-msg-assist {
-    animation: nba-msg-in 0.34s var(--ease-out) both;
-  }
-
-  .nba-error {
-    animation: nba-msg-in 0.34s var(--ease-out) both;
-  }
-
-  .nba-tools.running .nba-dot {
-    animation: nba-pulse 1.4s var(--ease-smooth) infinite;
-  }
-
-  .nba-tools.running .nba-tool-chip::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.1) 50%, transparent 58%);
-    animation: nba-sweep 1.8s var(--ease-smooth) infinite;
-    pointer-events: none;
-  }
-
-  .nba-typing i {
-    animation: nba-dot-jump 1.15s var(--ease-smooth) infinite;
-  }
-
-  .nba-typing i:nth-child(2) {
-    animation-delay: 0.14s;
-  }
-
-  .nba-typing i:nth-child(3) {
-    animation-delay: 0.28s;
-  }
-
-  .nba-drawer {
-    animation: nba-drawer-in 0.32s var(--ease-out);
-  }
-
-  .nba-dialog {
-    animation: nba-pop-in 0.3s var(--ease-out);
-  }
-
-  .nba-elapsed {
-    animation: nba-fade-in 0.5s var(--ease-out);
-  }
-}
-
-/* 减少动效:一律关闭(含伪元素与 transition) */
 @media (prefers-reduced-motion: reduce) {
-  .nba-app,
-  .nba-app *,
-  .nba-app *::before,
-  .nba-app *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-/* ============ 移动端(375px 档) ============ */
-
-@media (max-width: 480px) {
-  .nba-app {
-    max-width: none;
-  }
-
-  .nba-thread {
-    --pad-x: 0.75rem;
-    --pad-t: 1rem;
-    --pad-b: 1.25rem;
-  }
-
-  .nba-composer {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-  }
-
-  .nba-msg-user {
-    max-width: 92%;
-  }
-
-  .nba-msg-bot {
-    padding: 0.65rem 0.75rem;
-  }
-
-  /* 表格在窄屏可靠横滚,首列不换行由 nowrap 保证 */
-  .nba-md table {
-    font-size: 0.8rem;
-  }
-
-  .nba-dialog {
-    padding: 1.1rem 1rem 0.95rem;
-  }
+  .nba-dot { animation: none; }
 }
