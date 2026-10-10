@@ -1,57 +1,38 @@
 /* ============================================================
-   NBA Chat — 视觉系统 v4「纸」
-   v3 克制公式不变(字重 400-500 / 发丝线 / 单一同源红 / 宽栏),
-   画布换为 Claude 式暖米白纸色;系统深色偏好自动切回近黑。
+   NBA Chat — 视觉系统 v5「Arena」
+   体育气场:深色球馆底 / 真 NBA 红 #C8102E 自信点缀 /
+   加粗显示字(标题/比分/字标)/ 方圆角 / 发丝线仍代阴影
    ============================================================ */
 
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 
-  --bg: #faf9f7;                        /* 暖纸画布 */
-  --surface: #f1efe9;                   /* 卡面:用户气泡/抽屉 */
-  --composer: #ffffff;                  /* 输入卡:白,浮于纸上 */
-  --elevated: #ffffff;                  /* 弹层 */
-  --line: rgba(0, 0, 0, 0.09);          /* 发丝线 */
-  --line-faint: rgba(0, 0, 0, 0.06);
-  --line-strong: rgba(0, 0, 0, 0.16);
-  --hover: rgba(0, 0, 0, 0.04);
-  --text: #2e2d29;
-  --text-2: #6e6c64;
-  --text-3: #98968c;
-  --text-strong: #1d1c19;
-  --accent: #a84343;                    /* 唯一强调色:全页同源的降饱和 NBA 红 */
-  --accent-hover: #b95050;
-  --accent-soft: rgba(168, 67, 67, 0.10);
-  --accent-line: rgba(168, 67, 67, 0.45);
-  --radius: 8px;
-  --radius-lg: 12px;
+  --bg: #101114;                        /* 球馆暗场 */
+  --surface: #191a20;                   /* 卡面 */
+  --composer: #16171c;                  /* 输入卡 */
+  --elevated: #1e1f26;                  /* 弹层 */
+  --line: rgba(255, 255, 255, 0.08);
+  --line-faint: rgba(255, 255, 255, 0.055);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --hover: rgba(255, 255, 255, 0.05);
+  --text: #f2f2f4;
+  --text-2: #a8a9b0;
+  --text-3: #73747d;
+  --text-strong: #ffffff;
+  --accent: #c8102e;                    /* 真 NBA 红,自信但不滥用 */
+  --accent-hover: #e02444;
+  --accent-soft: rgba(200, 16, 46, 0.16);
+  --accent-line: rgba(200, 16, 46, 0.62);
+  --radius: 6px;                        /* 方一点,更运动 */
+  --radius-lg: 10px;
+  --display: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   --col: 46rem;                         /* 阅读栏 736px */
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
   --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-/* 系统深色偏好 → v3 近黑 */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0d0d0f;
-    --surface: #141417;
-    --composer: #121215;
-    --elevated: #1a1a1e;
-    --line: rgba(255, 255, 255, 0.07);
-    --line-faint: rgba(255, 255, 255, 0.05);
-    --line-strong: rgba(255, 255, 255, 0.13);
-    --hover: rgba(255, 255, 255, 0.05);
-    --text: #ececef;
-    --text-2: #a2a2ab;
-    --text-3: #6f6f79;
-    --text-strong: #ffffff;
-    --accent: #b54a4a;
-    --accent-hover: #c45c5c;
-    --accent-soft: rgba(181, 74, 74, 0.13);
-    --accent-line: rgba(181, 74, 74, 0.5);
-  }
-}
 
 * { box-sizing: border-box; }
 
@@ -98,6 +79,7 @@ button {
   height: 100dvh;
   min-height: 100dvh;
   background: var(--bg);
+  border-top: 2px solid var(--accent); /* 体育品牌条 */
 }
 
 /* ---------- 顶栏 ---------- */
@@ -114,9 +96,11 @@ button {
 
 .nba-header h1 {
   margin: 0;
-  font-size: 15px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: -0.02em;
   display: flex;
   align-items: baseline;
   gap: 5px;
@@ -124,7 +108,7 @@ button {
   justify-content: center;
 }
 
-.nba-logo-nba { color: var(--accent); font-weight: 500; }
+.nba-logo-nba { color: var(--accent); font-weight: 800; }
 .nba-sub { display: none; }
 
 .nba-icon-btn {
@@ -194,10 +178,22 @@ button {
 
 .nba-empty-title {
   margin: 0;
-  font-size: 21px;
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  color: var(--text);
+  font-family: var(--display);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-strong);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.nba-empty-title::before {
+  content: "";
+  width: 9px;
+  height: 22px;
+  background: var(--accent);
+  border-radius: 1px;
+  flex: none;
 }
 
 .nba-empty-tag {
@@ -210,23 +206,36 @@ button {
 .nba-suggest {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 8px;
   width: 100%;
-  border-top: 1px solid var(--line-faint);
 }
 
 .nba-suggest button {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
   text-align: left;
-  padding: 12px 2px;
+  padding: 14px 16px;
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--text-2);
-  border-bottom: 1px solid var(--line-faint);
-  transition: color 0.15s ease, padding-left 0.15s ease, background 0.15s ease;
+  background: var(--surface);
+  border: 1px solid var(--line-faint);
+  border-left: 2px solid transparent;
+  border-radius: var(--radius);
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
-.nba-suggest button:hover { color: var(--text); background: var(--hover); }
+.nba-suggest button::after {
+  content: "\203A";
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 700;
+  color: transparent;
+  transition: color 0.15s ease;
+}
+.nba-suggest button:hover { color: var(--text-strong); border-left-color: var(--accent); }
+.nba-suggest button:hover::after { color: var(--accent); }
 
 /* ---------- 消息 ---------- */
 
@@ -242,7 +251,7 @@ button {
   max-width: 85%;
   background: var(--surface);
   border: 1px solid var(--line-faint);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   padding: 9px 14px;
   font-size: 14.5px;
   line-height: 1.65;
@@ -347,7 +356,7 @@ button {
 .nba-md p { margin: 10px 0; }
 .nba-md h1, .nba-md h2, .nba-md h3, .nba-md h4 {
   margin: 22px 0 8px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--text-strong);
 }
@@ -357,7 +366,7 @@ button {
 .nba-md h4 { font-size: 15px; }
 
 .nba-md strong, .nba-md b {
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-strong);
 }
 
@@ -401,8 +410,8 @@ button {
   width: 100%;
   margin: 14px 0;
   border-collapse: collapse;
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 13.5px;
+  line-height: 1.55;
   font-variant-numeric: tabular-nums;
   display: block;
   overflow-x: auto;
@@ -470,14 +479,14 @@ button {
 
 .nba-send {
   flex: none;
-  height: 32px;
-  padding: 0 14px;
-  border-radius: 6px;
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 4px;
   background: var(--accent);
   color: #fff;
   font-size: 13px;
-  font-weight: 400;
-  letter-spacing: 0.02em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   transition: background 0.15s ease, transform 0.1s ease;
 }
 .nba-send:hover:not(:disabled) { background: var(--accent-hover); }
@@ -494,7 +503,7 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  height: 32px;
+  height: 34px;
   padding: 0 14px;
   border-radius: 6px;
   border: 1px solid var(--line-strong);
@@ -539,14 +548,10 @@ button {
 .nba-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.32);
+  background: rgba(0, 0, 0, 0.6);
   z-index: 40;
   animation: nba-fade 0.16s ease;
 }
-@media (prefers-color-scheme: dark) {
-  .nba-overlay { background: rgba(0, 0, 0, 0.55); }
-}
-
 .nba-drawer {
   position: fixed;
   top: 0;
@@ -636,7 +641,7 @@ button {
 
 /* ---------- 设置弹窗 ---------- */
 
-.nba-dialog-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.32); z-index: 60; animation: nba-fade 0.16s ease; }
+.nba-dialog-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: 60; animation: nba-fade 0.16s ease; }
 @media (prefers-color-scheme: dark) {
   .nba-dialog-overlay { background: rgba(0, 0, 0, 0.55); }
 }
