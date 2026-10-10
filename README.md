@@ -59,7 +59,7 @@ npm test   # vitest,65 项
 
 线上 31 题评测记录(含逐题档位、修补回路、A/B 对照、时延)见 [`scripts/eval-results.md`](scripts/eval-results.md),题目清单见 `scripts/eval-questions.md`。
 
-本次场边设计方案与实施记录见 `docs/superpowers/specs/2026-10-10-courtside-redesign.md` 和 `docs/superpowers/plans/2026-10-10-courtside-redesign.md`。球场背景 `public/courtside-arena.webp` 为 AI 生成的氛围图，不代表某场真实赛事。
+本次场边设计方案与实施记录见 `docs/superpowers/specs/2026-10-10-courtside-redesign.md` 和 `docs/superpowers/plans/2026-10-10-courtside-redesign.md`。球场背景 `public/courtside-arena.webp` 与篮球缩略图 `public/courtside-ball.webp` 为依据设计稿重建的 AI 氛围图，不代表某场真实赛事。球队标识来自 NBA 官方球队页对应的公开 CDN，保存在 `public/teams/`；标题使用 Noto Sans SC Heavy 字符子集，许可随字体保存在 `public/fonts/`。
 
 本次验证覆盖 1440px 桌面、390px / 320px 手机，真实赛程读取、时间线展开 / 收起 / 追问、会话切换、设置关闭、错误及空数据状态。完整旧版 31 题模型评测未重新执行。全仓库 lint 仍有基线已有的 47 项 `no-explicit-any` 错误；本次新增及修改的界面代码通过独立 lint 检查。
 
@@ -101,3 +101,7 @@ docs/
 - vercel.app 域名在大陆网络需代理访问(可用本地 `npm run dev` 替代验证)
 - 限流为 Serverless 实例内存级,多实例下仅尽力而为
 - 默认档 qwen-plus 在纯观点题上仍可能编造精确统计(模型级,详见 eval-results.md 的 F1/F2 记录;设置中切 qwen-max 可根治该类问题)
+
+## 设计稿对齐（2026-10-10）
+
+以用户提供的桌面与手机参考图重新对齐：满幅球场背景、悬浮比分卡、深色输入框和红色发送按钮、横向比赛卡与查询入口。首页默认展示经典比赛，与参考图保持一致；今天和昨天仍可切换并实时读取赛程。手机端使用顶部比分卡、红色问题气泡和上半场 / 第三节 / 末节逐段查询。比分卡依据查询结果显示，不为还原图形填造数据。背景照片为重建素材，不承诺摄影细节逐像素相同。

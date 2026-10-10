@@ -28,7 +28,7 @@ export function ChatMessage({ message, elapsed, streaming, context, onAsk, busy 
       {!hasText && !lookups.length && streaming && <span className="nba-typing" role="status" aria-label="正在整理回答"><i /><i /><i /></span>}
       {!hasText && !streaming && !lookups.length && <p className="nba-interrupted">回答已停止。你可以继续追问。</p>}
     </div>
-    {hasText && <div className="nba-msg-meta"><button type="button" className={`nba-copy ${copyState}`} onClick={copy}><Icon name={copyState === 'copied' ? 'check' : 'copy'} width="14" height="14" />{copyState === 'copied' ? '已复制' : copyState === 'error' ? '复制失败，请重试' : '复制回答'}</button>{elapsed != null && <span>{(elapsed / 1000).toFixed(1)} 秒</span>}</div>}
     {hasText && showFollowUps && onAsk && <FollowUps parts={message.parts} game={context ?? null} onAsk={onAsk} busy={busy} />}
+    {hasText && <div className="nba-msg-meta"><button type="button" className={`nba-copy ${copyState}`} onClick={copy}><Icon name={copyState === 'copied' ? 'check' : 'copy'} width="14" height="14" />{copyState === 'copied' ? '已复制' : copyState === 'error' ? '复制失败，请重试' : '复制回答'}</button>{elapsed != null && <span>{(elapsed / 1000).toFixed(1)} 秒</span>}</div>}
   </article>;
 }

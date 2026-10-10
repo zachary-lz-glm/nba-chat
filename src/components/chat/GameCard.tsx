@@ -1,8 +1,12 @@
 import { Fragment, type CSSProperties } from 'react';
+import Image from 'next/image';
 import { gameDate, gameQuestion, statusLabel, teamColor, teamName, type GameCard as Game } from '@/lib/client/basketball';
 import { Icon } from '../ui/Icon';
 
+const TEAM_IDS: Record<string, number> = { ATL:2737, BOS:2738, CLE:2739, NO:2740, NOP:2740, CHI:2741, DAL:2742, DEN:2743, GSW:2744, HOU:2745, LAC:2746, LAL:2747, MIA:2748, MIL:2749, MIN:2750, BKN:2751, NY:2752, NYK:2752, ORL:2753, IND:2754, PHI:2755, PHX:2756, POR:2757, SAC:2758, SA:2759, SAS:2759, OKC:2760, TOR:2761, UTA:2762, MEM:2763, WSH:2764, WAS:2764, DET:2765, CHA:2766 };
+
 export function TeamBadge({ abbr }: { abbr: string }) {
+  if (TEAM_IDS[abbr]) return <Image className="courtside-team-logo" src={`/teams/${1610610000 + TEAM_IDS[abbr]}.svg`} alt={`${teamName(abbr)}队徽`} width={60} height={60} unoptimized />;
   return <span className="courtside-team-badge" style={{ '--team-color': teamColor(abbr) } as CSSProperties}>{abbr}</span>;
 }
 

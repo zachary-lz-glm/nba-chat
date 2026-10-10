@@ -1,7 +1,14 @@
 import type { SVGProps } from 'react';
 
-type Name = 'menu' | 'arrow' | 'down' | 'close' | 'plus' | 'settings' | 'copy' | 'check' | 'stop' | 'clock' | 'ball' | 'refresh';
+type Name = 'menu' | 'arrow' | 'down' | 'close' | 'plus' | 'settings' | 'copy' | 'check' | 'stop' | 'clock' | 'ball' | 'refresh' | 'send' | 'user' | 'back' | 'more' | 'chevron' | 'chart' | 'play';
 const paths: Record<Name, string> = {
+  send: 'm21 3-7 18-4-7-7-4 18-7ZM10 14 21 3',
+  user: 'M16 8a4 4 0 1 1-8 0 4 4 0 0 1 8 0M5 21v-2a7 7 0 0 1 14 0v2',
+  back: 'm15 4-8 8 8 8',
+  more: 'M12 4h.01M12 12h.01M12 20h.01',
+  chevron: 'm9 5 7 7-7 7',
+  chart: 'M4 13h3v8H4zM10 5h3v16h-3zM16 9h3v12h-3z',
+  play: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0m-11-4 6 4-6 4V8',
   menu: 'M4 7h16M4 12h16M4 17h10',
   arrow: 'M7 17 17 7M7 7h10v10',
   down: 'M12 4v16M6 14l6 6 6-6',

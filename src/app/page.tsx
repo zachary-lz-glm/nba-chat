@@ -47,11 +47,11 @@ export default function Home() {
     <a className="courtside-skip" href="#main-content">跳到主要内容</a>
     <header className="nba-header">
       <div className="nba-header-start">
-        <button type="button" className="nba-icon-btn" onClick={() => setDrawerOpen(true)} aria-label="会话列表"><Icon name="menu" /></button>
+        <button type="button" className="nba-icon-btn nba-session-toggle" onClick={() => hasMessages ? void newChat() : setDrawerOpen(true)} aria-label={hasMessages ? '返回首页' : '会话列表'}><Icon name={hasMessages ? 'back' : 'menu'} /></button>
         <h1 aria-label="NBA Chat"><span className="nba-brand-word">NBA <em>Chat</em></span></h1>
         <nav className="nba-nav" aria-label="主导航"><button type="button" className="nba-nav-item active" onClick={() => { if (hasMessages) void newChat(); }} aria-current="page">聊比赛</button><button type="button" className="nba-nav-item" onClick={() => setDrawerOpen(true)}>历史对话</button></nav>
       </div>
-      <div className="nba-header-end"><span className="nba-timezone"><span />北京时间</span><button type="button" className="nba-header-new" onClick={() => { void newChat(); }} aria-label="新建会话"><Icon name="plus" width="16" height="16" /><span>新对话</span></button><button type="button" className="nba-icon-btn" onClick={() => setSettingsOpen(true)} aria-label="设置" disabled={busy}><Icon name="settings" /></button></div>
+      <div className="nba-header-end"><span className="nba-timezone"><Icon name="clock" />北京时间<Icon name="chevron" width="12" height="12" /></span><button type="button" className="nba-header-new" onClick={() => { void newChat(); }} aria-label="新建会话"><Icon name="plus" width="16" height="16" /><span>新对话</span></button><button type="button" className="nba-icon-btn nba-profile" onClick={() => setSettingsOpen(true)} aria-label="设置" disabled={busy}><Icon name="user" /><Icon name="more" /></button></div>
     </header>
     {!hasMessages ? <CourtsideHome onAsk={send} onStop={() => { void chat.stop(); }} busy={busy} /> : <>
       {currentGame && <GameContext game={currentGame} onClear={() => { void newChat(); }} />}

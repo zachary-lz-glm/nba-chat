@@ -469,3 +469,252 @@ button:active:not(:disabled) { transform: translateY(1px); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+/* Faithful translation of the approved courtside reference. */
+:root { --bg: #071520; --surface: #0d1d2a; --elevated: #152636; --accent: #ed3547; --accent-hover: #ff4c5e; --text: #f3f5f8; --text-2: #bdcadd; --text-3: #9eafc3; --display: var(--font-courtside-display), var(--sans); }
+.nba-app { background: radial-gradient(ellipse at 75% 95%, #10243380, transparent 65%), var(--bg); }
+.nba-header { height: 66px; padding-inline: max(40px, calc((100vw - 1360px) / 2)); border-color: #536e8560; background: linear-gradient(100deg, #0d1c28, #071520); }
+.nba-header-start { gap: 32px; }
+.nba-header h1 { font-family: var(--display); font-size: 34px; line-height: 1; font-weight: 800; letter-spacing: -.8px; white-space: nowrap; }
+.nba-header h1 em { color: var(--text); font-weight: 700; }
+.nba-brand-word { color: var(--accent); }
+.nba-nav { border-left: 1px solid #7891a560; padding-left: 36px; gap: 38px; margin-left: 2px; }
+.nba-nav-item { font-size: 15px; font-weight: 600; min-height: 30px; }
+.nba-nav-item.active::after { bottom: -17px; height: 3px; }
+.nba-session-toggle { display: none; }
+.nba-header-new { display: none; }
+.nba-app[data-view="chat"] .nba-session-toggle, .nba-app[data-view="chat"] .nba-header-new { display: inline-flex; }
+.nba-timezone { color: var(--text-2); font-size: 14px; gap: 9px; margin-right: 18px; }
+.nba-timezone svg:last-child { transform: rotate(90deg); }
+.nba-profile { width: 36px; height: 36px; border-radius: 50%; background: #33485f; color: #d9e4f4; }
+.nba-profile > svg:last-child { display: none; }
+.courtside-container { width: 100%; max-width: 1440px; padding-inline: 40px; margin-inline: auto; }
+.courtside-hero { display: block; height: clamp(520px, 46vw, 620px); min-height: 0; padding: 0; border-bottom: 1px solid #536e8540; }
+.courtside-hero-art { inset: 0; opacity: 1; background: linear-gradient(90deg, #06131fec 0%, #071520b0 35%, #07152018 72%), linear-gradient(0deg, #07152008, #07152005 65%, #07152060), url('/courtside-arena.webp') center 54% / cover; }
+.courtside-daybar { height: 76px; padding-top: 0; padding-bottom: 0; justify-content: flex-start; gap: 26px; }
+.courtside-tabs { gap: 25px; }
+.courtside-tabs button { border: 0; border-radius: 24px; min-height: 36px; padding: 4px 12px; color: #d4deeb; font-size: 16px; font-weight: 600; }
+.courtside-tabs button:first-child { padding-left: 10px; }
+.courtside-tabs button[aria-selected="true"] { background: #68222b80; color: #ff4c5d; }
+.courtside-tabs button:hover { background: #ffffff0b; }
+.courtside-date { border-left: 1px solid #7891a550; padding-left: 34px; margin: 0; color: #e4eaf3; font-size: 15px; }
+.courtside-hero-stage { height: calc(100% - 76px); position: relative; padding-top: 40px; }
+.courtside-hero-copy { width: 57%; max-width: 730px; }
+.courtside-hero h2 { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: clamp(64px, 6.8vw, 96px); font-weight: 900; line-height: 1.13; letter-spacing: -2px; max-width: none; text-wrap: nowrap; text-shadow: 0 3px 20px #00101a50; }
+.courtside-hero-description { font-size: clamp(17px, 1.7vw, 22px); font-weight: 550; line-height: 1.55; margin: 16px 0 0; max-width: none; white-space: nowrap; letter-spacing: -.3px; }
+.nba-composer.hero { max-width: 590px; margin-top: 54px; }
+.nba-composer.hero .nba-composer-shell { border: 2px solid #7b95b370; background: linear-gradient(115deg, #162736d9, #192c3bcc); backdrop-filter: blur(12px); border-radius: 16px; padding: 8px 9px 8px 24px; min-height: 74px; box-shadow: inset 0 1px 0 #ffffff0a; }
+.nba-composer.hero textarea { color: var(--text); font-size: 19px; min-height: 52px; padding-block: 11px; }
+.nba-composer.hero textarea::placeholder { color: #b4c4d9; }
+.nba-composer.hero .nba-send, .nba-composer.hero .nba-stop { width: 56px; height: 54px; border-radius: 10px; }
+.nba-composer.hero .nba-send:disabled, .nba-send:disabled { background: var(--accent); color: white; opacity: .95; }
+.nba-composer.hero .nba-send svg { width: 26px; height: 26px; }
+.nba-composer.hero .nba-composer-foot { display: none; }
+.courtside-team-logo { display: block; width: 54px; height: 54px; object-fit: contain; flex: none; filter: drop-shadow(0 1px 2px #0004); }
+.courtside-scoreline { display: grid; grid-template-columns: 54px auto auto 18px auto auto 54px; align-items: center; justify-content: center; gap: 9px; white-space: nowrap; }
+.courtside-scoreline-name { font-size: 20px; font-weight: 650; line-height: 1.5; }
+.courtside-scoreline-name small { display: block; color: #b4c5da; font-family: var(--sans); font-size: 14px; font-weight: 400; }
+.courtside-scoreline strong { font-family: var(--display); font-size: 46px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; letter-spacing: .2px; }
+.courtside-scoreline-divider { font-family: var(--display); font-size: 34px; line-height: 1; text-align: center; }
+.courtside-featured { border: 1px solid #46617880; border-radius: 10px; background: linear-gradient(120deg, #102330e8, #0c1a26ee); box-shadow: inset 0 1px 0 #ffffff05, 0 8px 30px #00000020; overflow: hidden; }
+.courtside-featured.hero { position: absolute; right: 36px; bottom: 68px; width: 42%; max-width: 510px; backdrop-filter: blur(10px); }
+.courtside-featured.hero .courtside-featured-body { padding: 14px 18px; text-align: center; }
+.courtside-featured-title { font-family: var(--display); font-size: 18px; color: #dce7f4; letter-spacing: .4px; line-height: 1.5; margin: 0 0 12px; font-weight: 500; }
+.courtside-featured.hero .courtside-scoreline-name small { display: none; }
+.courtside-featured.hero .courtside-scoreline { border-bottom: 1px solid #7891a550; padding-bottom: 14px; }
+.courtside-featured-date { color: #b4c6db; font-size: 14px; margin: 9px 0 12px; }
+.courtside-primary { display: inline-flex; gap: 12px; align-items: center; justify-content: center; min-height: 42px; padding: 5px 25px; color: #fff; background: var(--accent); border: 1px solid #ff5c6680; border-radius: 8px; font-size: 17px; font-weight: 600; box-shadow: inset 0 1px 0 #ffffff10; }
+.courtside-primary:hover:not(:disabled) { background: var(--accent-hover); }
+.courtside-featured.hero .courtside-primary { min-width: 204px; }
+.courtside-schedule { border-top: 0; padding-top: 20px; padding-bottom: 0; }
+.courtside-section-heading { display: flex; align-items: center; gap: 28px; margin-bottom: 16px; }
+.courtside-section-heading h3 { font-size: 24px; font-weight: 650; letter-spacing: -.7px; white-space: nowrap; }
+.courtside-section-heading h3::before { content: ''; display: inline-block; background: var(--accent); width: 5px; height: 25px; border-radius: 2px; vertical-align: -4px; margin-right: 13px; }
+.courtside-heading-line { height: 1px; flex: 1; background: #6b879a55; }
+.courtside-section-heading p { margin: 0; font-size: 15px; color: #b9c9de; }
+.courtside-match-launcher { display: grid; grid-template-columns: minmax(0, 3fr) minmax(220px, 1fr); gap: 14px; }
+.courtside-featured.strip { display: grid; grid-template-columns: 42% minmax(0, 1fr); height: 154px; position: relative; }
+.courtside-featured-photo { position: relative; background: linear-gradient(90deg, transparent, #0d1e2b), url('/courtside-ball.webp') 35% center / cover; }
+.courtside-featured.strip .courtside-featured-body { position: relative; min-width: 0; padding: 19px 22px 12px 0; text-align: center; }
+.courtside-featured.strip .courtside-featured-title { position: absolute; left: -205px; bottom: 23px; margin: 0; font-size: 16px; }
+.courtside-featured.strip .courtside-featured-date { position: absolute; left: -205px; bottom: 8px; margin: 0; font-size: 13px; }
+.courtside-featured.strip .courtside-scoreline { grid-template-columns: 54px auto auto 16px auto auto 54px; gap: 8px; }
+.courtside-featured.strip .courtside-scoreline-name { font-size: 17px; }
+.courtside-featured.strip .courtside-scoreline strong { font-size: 42px; }
+.courtside-featured.strip .courtside-primary { min-width: 230px; margin-top: 16px; }
+.courtside-quick-actions { border: 1px solid #46617880; border-radius: 9px; background: linear-gradient(120deg, #11253499, #0b1a2699); padding: 8px 20px; display: flex; flex-direction: column; }
+.courtside-quick-actions button { display: flex; align-items: center; gap: 18px; min-height: 65px; text-align: left; font-size: 17px; font-weight: 550; flex: 1; }
+.courtside-quick-actions button + button { border-top: 1px solid #6b879a60; }
+.courtside-quick-actions button > svg:first-child { width: 26px; height: 26px; color: #b4c9e4; }
+.courtside-quick-actions button > svg:last-child { width: 15px; height: 15px; margin-left: auto; color: #b4c9e4; }
+.courtside-quick-actions button:hover { color: #ff6a79; }
+.courtside-home-foot { display: flex; justify-content: space-between; padding: 12px 0 18px; border: 0; font-size: 12px; color: #a6b6cb; }
+.courtside-home-foot button { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; }
+.courtside-other-games { margin-top: 20px; }
+.courtside-other-games > p { font-size: 13px; color: var(--text-3); }
+.courtside-team-row .courtside-team-logo { width: 36px; height: 36px; }
+.courtside-match-side .courtside-team-logo { width: 42px; height: 42px; }
+.courtside-context { position: relative; display: grid; grid-template-columns: 1fr auto; max-width: 864px; width: calc(100% - 64px); align-self: center; padding: 14px 20px; margin: 20px 0 0; border: 1px solid #45607770; border-radius: 10px; background: linear-gradient(120deg, #122532, #0a1925); gap: 6px; }
+.courtside-context-label { grid-column: 1; color: #aabbd1; font-size: 13px; text-align: center; }
+.courtside-context .courtside-scoreline { grid-column: 1; }
+.courtside-context .courtside-scoreline-name small { display: none; }
+.courtside-context-detail { grid-column: 1; text-align: center; font-size: 13px; }
+.courtside-context-clear { grid-column: 2; grid-row: 1 / 4; }
+.nba-msg-user p { color: #fff; font-weight: 550; background: var(--accent); border: 1px solid #ff657460; border-radius: 14px 14px 0 14px; }
+.nba-assist-label { color: #f3f5f8; font-family: var(--display); font-size: 23px; font-weight: 700; gap: 12px; letter-spacing: -.2px; }
+.nba-assist-label > span:last-child { color: #a3b5cc; border: 0; padding-left: 0; font-family: var(--sans); font-size: 12px; }
+.nba-assist-mark svg { width: 30px; height: 30px; }
+.nba-send, .nba-stop { width: 46px; height: 46px; border-radius: 9px; }
+.nba-composer-shell { border: 2px solid #647f9b70; border-radius: 13px; background: #152636aa; padding: 7px 9px 7px 18px; }
+.nba-composer-shell textarea { font-size: 16px; }
+.courtside-phases { position: relative; border-left: 1px solid #4d6578; padding-left: 28px; margin-left: 12px; padding-bottom: 14px; }
+.courtside-phases h3 { font-size: 24px; margin: 0; font-weight: 650; line-height: 1.4; }
+.courtside-phases > p { font-size: 14px; margin: 10px 0 18px; color: #b9c9de; }
+.courtside-phases ol { list-style: none; margin: 0; padding: 0; }
+.courtside-phases li { position: relative; margin-bottom: 14px; }
+.courtside-phases li > span { position: absolute; left: -43px; top: 2px; z-index: 1; border: 3px solid var(--bg); border-radius: 50%; background: linear-gradient(135deg, #a7b6cd, #576c87); color: #0b1a27; width: 34px; height: 34px; display: grid; place-items: center; font-family: var(--display); font-size: 22px; font-weight: 700; }
+.courtside-phases li:not(:last-child)::after { content: ''; position: absolute; height: calc(100% - 6px); width: 1px; left: -29px; top: 35px; border-left: 1px dashed #698299; }
+.courtside-phases li button { width: 100%; text-align: left; padding: 10px 16px; min-height: 68px; border-radius: 12px; background: linear-gradient(100deg, #122533, #0f1e2b); position: relative; }
+.courtside-phases li button strong { font-size: 16px; display: block; font-weight: 600; }
+.courtside-phases li button small { font-size: 13px; display: block; color: #a9bdd6; }
+.courtside-phases li button svg { position: absolute; right: 14px; top: 17px; color: #a9bdd6; }
+.courtside-phases li button:hover { background: #1d3243; }
+.courtside-followups { margin-top: 20px; }
+.courtside-followups-label { display: none; }
+.courtside-followups-list { display: flex; flex-direction: column; gap: 0; }
+.courtside-followups-list button { border: 0; border-top: 1px solid #5c788e65; border-radius: 0; min-height: 62px; padding: 12px 6px; font-size: 15px; font-weight: 600; gap: 24px; }
+.courtside-followups-list button > svg:first-child { width: 24px; height: 24px; color: #bdd0e9; }
+.courtside-followups-list button > svg:last-child { margin-left: auto; }
+@media (min-width: 1441px) { .courtside-featured.hero { right: 40px; } }
+@media (max-width: 1100px) and (min-width: 701px) {
+  .courtside-hero-copy { width: 58%; }
+  .courtside-hero h2 { font-size: 64px; }
+  .courtside-hero-description { font-size: 16px; }
+  .courtside-featured.hero { width: 40%; right: 28px; }
+  .courtside-featured.hero .courtside-scoreline { grid-template-columns: 44px auto auto 12px auto auto 44px; gap: 5px; }
+  .courtside-featured.hero .courtside-team-logo { width: 44px; height: 44px; }
+  .courtside-featured.hero .courtside-scoreline-name { font-size: 15px; }
+  .courtside-featured.hero .courtside-scoreline strong { font-size: 38px; }
+  .courtside-featured.strip { grid-template-columns: 25% minmax(0, 1fr); }
+  .courtside-featured.strip .courtside-featured-title, .courtside-featured.strip .courtside-featured-date { position: static; }
+  .courtside-featured.strip .courtside-featured-body { padding: 8px 12px; }
+  .courtside-featured.strip .courtside-scoreline { grid-template-columns: 38px auto auto 12px auto auto 38px; gap: 4px; }
+  .courtside-featured.strip .courtside-team-logo { width: 38px; height: 38px; }
+  .courtside-featured.strip .courtside-scoreline strong { font-size: 34px; }
+  .courtside-featured.strip .courtside-scoreline-name { font-size: 14px; }
+  .courtside-featured.strip .courtside-primary { margin-top: 4px; min-width: 160px; font-size: 14px; min-height: 32px; }
+}
+@media (max-width: 700px) {
+  .nba-header { height: 64px; padding-inline: 16px; }
+  .nba-header-start { gap: 0; }
+  .nba-header h1 { position: absolute; left: 50%; transform: translateX(-50%); font-size: 32px; }
+  .nba-session-toggle, .nba-app[data-view="chat"] .nba-session-toggle { display: inline-flex; }
+  .nba-nav, .nba-timezone, .nba-header-new, .nba-app[data-view="chat"] .nba-header-new { display: none; }
+  .nba-profile { background: none; }
+  .nba-profile > svg:first-child { display: none; }
+  .nba-profile > svg:last-child { display: block; stroke-width: 3; }
+  .courtside-container { padding-inline: 20px; }
+  .courtside-hero { height: auto; min-height: 625px; }
+  .courtside-hero-art { background-position: center, center, 62% center; background-image: linear-gradient(90deg, #06131fe8, #0715208a), linear-gradient(0deg, #07152045, transparent), url('/courtside-arena.webp'); }
+  .courtside-daybar { height: 90px; align-content: center; flex-wrap: wrap; gap: 5px 16px; }
+  .courtside-tabs { gap: 15px; }
+  .courtside-tabs button { font-size: 14px; padding-inline: 10px; }
+  .courtside-date { width: 100%; border: 0; padding-left: 10px; margin: 0; font-size: 12px; color: var(--text-3); }
+  .courtside-hero-stage { height: auto; padding-top: 28px; padding-bottom: 24px; }
+  .courtside-hero-copy { width: 100%; }
+  .courtside-hero h2 { font-size: clamp(38px, 10vw, 58px); letter-spacing: -1px; line-height: 1.2; }
+  .courtside-hero-description { font-size: 14px; white-space: normal; margin-top: 16px; max-width: 420px; }
+  .nba-composer.hero { margin-top: 26px; }
+  .nba-composer.hero .nba-composer-shell { min-height: 62px; padding-left: 14px; border-radius: 12px; }
+  .nba-composer.hero textarea { font-size: 14px; min-height: 40px; padding-block: 8px; }
+  .nba-composer.hero .nba-send, .nba-composer.hero .nba-stop { width: 42px; height: 42px; border-radius: 8px; }
+  .courtside-featured.hero { position: static; width: 100%; margin-top: 24px; max-width: none; }
+  .courtside-featured.hero .courtside-featured-body { padding: 12px 16px; }
+  .courtside-scoreline { grid-template-columns: 42px auto auto 12px auto auto 42px; gap: 6px; }
+  .courtside-team-logo { width: 42px; height: 42px; }
+  .courtside-scoreline-name { font-size: 16px; }
+  .courtside-scoreline strong { font-size: 34px; }
+  .courtside-scoreline-divider { font-size: 26px; }
+  .courtside-featured.hero .courtside-scoreline { padding-bottom: 8px; }
+  .courtside-featured-title { font-size: 15px; margin-bottom: 8px; }
+  .courtside-featured-date { font-size: 12px; margin-block: 8px; }
+  .courtside-primary { font-size: 15px; min-height: 38px; }
+  .courtside-section-heading { gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .courtside-section-heading h3 { font-size: 21px; }
+  .courtside-heading-line { min-width: 24px; }
+  .courtside-section-heading p { font-size: 12px; width: 100%; }
+  .courtside-match-launcher { grid-template-columns: 1fr; }
+  .courtside-featured.strip { height: auto; min-height: 188px; grid-template-columns: 28% minmax(0, 1fr); }
+  .courtside-featured.strip .courtside-featured-body { padding: 14px 8px; }
+  .courtside-featured.strip .courtside-featured-title, .courtside-featured.strip .courtside-featured-date { position: static; font-size: 12px; }
+  .courtside-featured.strip .courtside-scoreline { display: grid; grid-template-columns: auto auto 10px auto auto; gap: 4px; }
+  .courtside-featured.strip .courtside-team-logo { display: none; }
+  .courtside-featured.strip .courtside-scoreline-name { font-size: 14px; }
+  .courtside-featured.strip .courtside-scoreline-name small { font-size: 11px; }
+  .courtside-featured.strip .courtside-scoreline strong { font-size: 30px; }
+  .courtside-featured.strip .courtside-primary { min-width: 0; width: 100%; margin: 8px 0; font-size: 14px; }
+  .courtside-quick-actions { padding: 0 16px; }
+  .courtside-quick-actions button { min-height: 56px; font-size: 15px; }
+  .courtside-home-foot { flex-direction: row; align-items: center; font-size: 10px; }
+  .courtside-context { width: calc(100% - 32px); margin: 0 16px; padding: 14px 10px; grid-template-columns: 1fr; gap: 9px; }
+  .courtside-context-label { font-size: 12px; }
+  .courtside-context .courtside-scoreline { grid-template-columns: 42px auto auto 10px auto auto 42px; gap: 5px; }
+  .courtside-context .courtside-scoreline-name { font-size: 14px; }
+  .courtside-context .courtside-scoreline strong { font-size: 33px; }
+  .courtside-context-detail { font-size: 12px; }
+  .courtside-context-clear { display: none; }
+  .nba-thread { padding-inline: 20px; }
+  .nba-thread-content { padding-top: 18px; padding-bottom: 20px; }
+  .nba-msg-user { margin-bottom: 20px; }
+  .nba-msg-user p { font-size: 14px; padding: 10px 16px; max-width: 95%; }
+  .nba-assist-label { font-size: 23px; margin-bottom: 12px; }
+  .nba-assist-label > span:last-child { font-size: 11px; }
+  .nba-msg-bot { font-size: 14px; }
+  .nba-composer { padding: 8px 14px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid #45607740; background: #0b1a27; }
+  .nba-composer-shell { padding: 5px 7px 5px 18px; }
+  .nba-composer-shell textarea { font-size: 14px; }
+  .nba-composer-foot { display: none; }
+  .nba-tools { margin-bottom: 16px; font-size: 11px; }
+  .nba-tools summary { min-height: 36px; }
+}
+@media (max-width: 360px) {
+  .courtside-container { padding-inline: 16px; }
+  .courtside-tabs { gap: 6px; }
+  .courtside-featured.hero .courtside-scoreline { gap: 3px; grid-template-columns: 34px auto auto 10px auto auto 34px; }
+  .courtside-featured.hero .courtside-team-logo { width: 34px; height: 34px; }
+  .courtside-featured.hero .courtside-scoreline-name { font-size: 14px; }
+  .courtside-featured.hero .courtside-scoreline strong { font-size: 30px; }
+  .courtside-context .courtside-scoreline { gap: 3px; grid-template-columns: 32px auto auto 10px auto auto 32px; }
+  .courtside-context .courtside-team-logo { width: 32px; height: 32px; }
+  .courtside-context .courtside-scoreline strong { font-size: 29px; }
+  .courtside-context .courtside-scoreline-name { font-size: 13px; }
+}
+@font-face { font-family: 'Courtside Headline'; src: url('/fonts/courtside-headline.ttf') format('truetype'); font-weight: 900; font-style: normal; font-display: swap; }
+.courtside-hero h2 { font-family: 'Courtside Headline', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif; }
+.courtside-hero { height: clamp(520px, 45.7vw, 620px); }
+.courtside-featured.hero { width: 40%; bottom: 70px; }
+.courtside-featured.hero .courtside-featured-body { padding-block: 12px; }
+.courtside-featured.hero .courtside-featured-title { margin-bottom: 10px; }
+.courtside-featured.hero .courtside-scoreline { padding-bottom: 12px; }
+.courtside-featured.hero .courtside-featured-date { margin: 8px 0 10px; }
+@media (max-width: 700px) {
+  .courtside-hero { height: auto; }
+  .courtside-featured.hero { width: 100%; }
+  .nba-assist-label > span:last-child { display: none; }
+  .nba-tools:not([open]) { position: relative; height: 0; border: 0; background: none; margin: 0; overflow: visible; }
+  .nba-tools:not([open]) summary { position: absolute; right: 0; top: -41px; padding: 6px 0 6px 8px; min-height: 28px; color: #9db0c8; gap: 5px; font-size: 10px; }
+  .nba-tools:not([open]) summary > .nba-lookup-icon, .nba-tools:not([open]) .nba-tools-count > span:first-child { display: none; }
+  .nba-tools-count { margin-left: 0; }
+  .nba-msg-meta { margin-top: 8px; }
+  .nba-copy { min-height: 28px; }
+  .courtside-followups { margin-top: 14px; }
+  .courtside-phases { padding-bottom: 0; }
+  .courtside-phases > p { margin: 10px 0 16px; font-size: 13px; }
+  .courtside-phases li { margin-bottom: 12px; }
+  .courtside-followups-list button { min-height: 54px; }
+}
+@media (min-width: 701px) and (max-width: 1100px) {
+  .courtside-hero-copy { width: 56%; }
+  .courtside-hero h2 { font-size: clamp(52px, 6.4vw, 64px); }
+  .courtside-hero-description { white-space: normal; font-size: 15px; }
+}

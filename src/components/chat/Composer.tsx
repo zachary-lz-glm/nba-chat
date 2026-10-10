@@ -28,7 +28,7 @@ export function Composer({ onSend, onStop, busy, hasMessages, variant, placehold
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !composing.current && !e.nativeEvent.isComposing && e.keyCode !== 229) { e.preventDefault(); send(); } }} />
         {busy
           ? <button type="button" className="nba-stop" onClick={onStop} aria-label="停止生成"><Icon name="stop" /></button>
-          : <button type="submit" className="nba-send" disabled={!text.trim()} aria-label="发送问题"><Icon name="arrow" /></button>}
+          : <button type="submit" className="nba-send" disabled={!text.trim()} aria-label="发送问题"><Icon name="send" /></button>}
       </form>
       <div className="nba-composer-foot"><span>赛事有记录，分析有依据。</span><span className="nba-shortcut"><kbd>Enter</kbd> 发送 · <kbd>Shift Enter</kbd> 换行</span></div>
     </div>
