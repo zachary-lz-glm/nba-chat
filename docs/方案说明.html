@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>NBA Chat 方案说明</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    font-size: 10.5pt; line-height: 1.62; color: #1a1a1a;
+  }
+  .page-break { page-break-before: always; }
+  h1 { font-size: 20pt; margin: 0 0 4pt; color: #0d0d0d; letter-spacing: 0.5pt; }
+  .subtitle { font-size: 10pt; color: #444; margin-bottom: 2pt; }
+  .meta { font-size: 9pt; color: #555; background: #f6f6f6; border-left: 3pt solid #c8102e; padding: 6pt 10pt; margin: 10pt 0 16pt; }
+  .meta strong { color: #1d428a; }
+  h2 { font-size: 13.5pt; margin: 18pt 0 8pt; padding-bottom: 3pt; border-bottom: 1.6pt solid #1d428a; color: #0d0d0d; page-break-after: avoid; }
+  h3 { font-size: 11.5pt; margin: 12pt 0 6pt; color: #1d428a; page-break-after: avoid; }
+  p { margin: 5pt 0; text-align: justify; }
+  ul, ol { margin: 5pt 0; padding-left: 18pt; }
+  li { margin: 2.5pt 0; text-align: justify; }
+  table { width: 100%; border-collapse: collapse; margin: 8pt 0 10pt; font-size: 9.3pt; page-break-inside: auto; }
+  th { background: #1d428a; color: #fff; font-weight: 600; padding: 4.5pt 6pt; border: 0.6pt solid #1d428a; text-align: left; }
+  td { padding: 4pt 6pt; border: 0.6pt solid #b9c2d4; vertical-align: top; }
+  tr:nth-child(even) td { background: #f3f5fa; }
+  tr { page-break-inside: avoid; }
+  pre {
+    background: #f4f4f5; border: 0.6pt solid #d4d4d8; border-radius: 4pt;
+    padding: 8pt 10pt; font-family: "SF Mono", Menlo, Consolas, "Courier New", monospace;
+    font-size: 7.6pt; line-height: 1.5; white-space: pre; overflow: hidden; page-break-inside: avoid;
+    margin: 8pt 0 10pt;
+  }
+  code { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 8.8pt; background: #f0f0f2; padding: 0.5pt 3pt; border-radius: 2.5pt; }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  strong { font-weight: 700; }
+  .highlight { background: #fdf2f4; border: 0.6pt solid #c8102e; border-radius: 4pt; padding: 7pt 10pt; margin: 9pt 0; }
+  .highlight p { margin: 0; }
+  .footnote { font-size: 8.8pt; color: #666; border-top: 0.8pt solid #ccc; padding-top: 6pt; margin-top: 14pt; }
+  .foot { text-align: center; font-size: 8.5pt; color: #888; margin-top: 16pt; }
+</style>
+</head>
+<body>
+
+<h1>NBA Chat 方案说明</h1>
+<div class="subtitle">NBA 官方风格中文智能问答 · 笔试题交付</div>
+<div class="meta">
+  在线体验:<strong>https://nba-chat.vercel.app</strong>(即开即用,无需配置;大陆网络访问 vercel.app 需自备代理)<br>
+  本文所有数据均为本人实测:31 题线上评测、7 次生产部署迭代、ESPN 端点逐个验证,全记录见仓库 <code>scripts/eval-results.md</code>。
+</div>
+
+<h2>1. 总体思路</h2>
+<p>做一个「NBA 官方风格」的中文问答产品,四个字概括:<strong>即开即用、事实可靠</strong>。</p>
+<table>
+  <tr><th style="width:14%">目标</th><th style="width:48%">手段</th><th>验证</th></tr>
+  <tr><td>事实可靠</td><td>客观数字一律工具查证,提示词最高优先级「事实纪律」禁编造;查不到如实说「暂无数据」</td><td>31 题评测,ESPN 直查做 ground truth 逐题核对</td></tr>
+  <tr><td>体验流畅</td><td>流式输出 + 工具调用过程可视化(「正在查证 6 月 23 日赛程…」)+ 会话持久化</td><td>中位时延 15-25s,单工具直查题 5-12s</td></tr>
+  <tr><td>合规稳健</td><td>六类红线话题先拒答、不检索,1-2 句引导回赛场</td><td>红线题 I1-I7(含包装变体)全部拦截</td></tr>
+  <tr><td>即开即用</td><td>站方预置阿里云百炼 key,评测官打开链接直接提问;另提供站方自选模型(qwen-flash/plus/max)与 BYOK 两档</td><td>三档线上冒烟 7 例全过</td></tr>
+</table>
+<p>一个贯穿全程的判断:<strong>评分权重里事实准确性 20% + 安全合规一票否决,而幻觉恰恰是 LLM 问答的默认失败模式</strong>。所以方案的重心不在花哨功能,而在「用工具纪律 + 评测回路把事实错误压到最低」,并把每一步的实测结果(包括失败的)如实写进本文。</p>
+
+<h2>2. 架构</h2>
+<pre>浏览器                                 Vercel(Hobby 免费档,Serverless)
+┌────────────────────────────┐        ┌──────────────────────────────────────┐
+│ Next.js App Router(客户端) │ HTTPS  │ POST /api/chat                       │
+│  useChat 流式渲染           │ ─────→ │  ① 动态系统提示注入:当前北京时间/     │
+│  工具调用状态条              │        │     赛季阶段与口径                    │
+│  会话 localStorage 持久化    │        │  ② streamText 多步工具循环(≤16 步)  │
+│  设置面板(三档模型切换)     │        │  ③ 模型解析(三档:站方默认/站方     │
+└────────────────────────────┘        │     自选 qwen-*/BYOK,Key 白名单)    │
+                                      │  ④ 10 个数据工具                     │
+                                      │     ├ ESPN 公开 JSON(9 个端点)      │
+                                      │     └ 中文维基(摘要+冠军列表)       │
+                                      │  ⑤ 压缩层:500KB+ 原始响应 → 1-8KB   │
+                                      │  ⑥ 内存级限流:12 req/min/IP        │
+                                      └──────────────────────────────────────┘</pre>
+<ul>
+  <li><strong>无数据库、无外部状态</strong>:数据全部来自公开互联网,会话历史存浏览器 localStorage。</li>
+  <li><strong>服务端取数</strong>:ESPN 调用全部在 Vercel 服务端完成,天然规避浏览器直连的 CORS 与封锁风险(参考产品是浏览器直连)。</li>
+  <li><strong>单问生命周期</strong>:用户输入 → 注入动态系统提示 → qwen-plus 决策 → 工具调用(ESPN → 压缩)→ 多步循环(≤16)→ 流式 Markdown 回浏览器 → 渲染表格/状态条 → 显示耗时。</li>
+  <li><strong>技术栈</strong>:Next.js 16(App Router)+ React 19 + TypeScript + Tailwind CSS 4;Vercel AI SDK(<code>ai</code> v7 + <code>@ai-sdk/openai-compatible</code>)接阿里云百炼 compatible-mode;react-markdown + remark-gfm 流式渲染;use-stick-to-bottom 吸底;vitest 单测 34 项。</li>
+</ul>
+
+<h2>3. 数据方案与实测记录</h2>
+<p>数据源只有两个:<strong>ESPN 公开 JSON 端点</strong>(赛程/赛果/单场/逐回合/排名/球员/新闻,无需鉴权)+ <strong>中文维基百科</strong>(历史背景、历年冠军列表)。不依赖任何内部库或付费数据。</p>
+<p>工具层 10 个:<code>get_games_by_date</code>、<code>get_game_box</code>、<code>get_game_plays</code>、<code>get_series_or_games_lookup</code>(≤35 天区间)、<code>get_standings</code>、<code>search_player</code>、<code>get_player_stats</code>、<code>get_player_gamelog</code>、<code>get_champions</code>、<code>get_news_or_wiki</code>。</p>
+<p>ESPN 无官方文档,以下坑全部是逐端点发真实请求实测踩出来并固化进代码与单测的:</p>
+<table>
+  <tr><th style="width:24%">端点/字段</th><th>实测结论(踩坑记录)</th></tr>
+  <tr><td>scoreboard <code>dates</code></td><td>按<strong>美东日历日</strong>组织。北京某日需查美东 D-1、D 两天,再按事件 UTC 时间戳回滤北京窗口(北京时间上午的比赛属于美东前一天)</td></tr>
+  <tr><td>scoreboard <code>series</code></td><td>系列赛大比分<strong>自带</strong>(<code>series.summary</code> 如 "OKC Leads 3-2"),不必逐场累加</td></tr>
+  <tr><td>scoreboard <code>season</code></td><td><code>type</code> 1/2/3 = 季前/常规/季后赛,据此生成「2026-27 季前赛」标签,根治了把季前赛当常规赛误标的问题</td></tr>
+  <tr><td>summary(box)</td><td>两队球员名单对齐;压缩为每队按出场时间前 9 人、列裁剪 MIN/PTS/REB/AST/FG/3PT/FT/±</td></tr>
+  <tr><td>summary(plays)</td><td>支持最后 N 秒(仅第四节及加时)/仅得分回合/按节过滤;压缩后逐回合表与 ESPN 官网逐条一致</td></tr>
+  <tr><td>search <code>uid</code></td><td>球员数字 id <strong>藏在 uid 字符串里</strong>(<code>s:40~l:46~a:4278073</code> → 4278073),需解析而非现成字段</td></tr>
+  <tr><td>gamelog</td><td><code>seasonTypes</code> 分组结构(Regular Season / Postseason,后者含总决赛场次);<code>season</code> 参数是<strong>结束年</strong>(2024-25 赛季→2025)——早期文档误标为起始年,曾直接导致赛季标注错误(A3/A2/D1)</td></tr>
+  <tr><td>stats</td><td>该端点<strong>忽略 season 参数,恒为生涯聚合</strong>(seasontype 2/3 区分常规/季后)。评测中模型曾把生涯场均 25.3 误当赛季值(真实赛季值 31.9),修复方式:工具返回值显式标注「career 为生涯聚合」,并强制单季场均以 gamelog 分组汇总为准</td></tr>
+  <tr><td>中文维基冠军列表</td><td>简体页是重定向,须抓繁体页 wikitext;繁体队名(奧克拉荷馬雷霆/俄克拉何马城雷霆、印第安那溜馬等)需归一映射;解析出近 30 年年份→冠军/总决赛比分/亚军,压缩至 ~3.2KB</td></tr>
+</table>
+<p><strong>压缩层</strong>是成本与质量的关键:ESPN 原始响应单场可达 500KB+(逐回合全量),直接进上下文既慢又贵。压缩后工具结果 1-8KB,且在 gamelog 侧预先按组算好场均,避免模型心算出错。</p>
+
+<h2>4. 时间与赛季</h2>
+<table>
+  <tr><th style="width:22%">问题</th><th>方案</th></tr>
+  <tr><td>「今天/昨天」按谁的日历算</td><td>三级换算:北京日历日 → 美东日期区间(北京一日恒覆盖美东 D-1 与 D 两天,夏冬令时均成立)→ 按事件 UTC 时间戳回滤北京窗口。评测 J2「昨天比赛」7 场比分/开球时间全对</td></tr>
+  <tr><td>赛季怎么算</td><td>动态注入:10 月起属新赛季(注意 10 月上中旬可能是季前赛,以工具返回标签为准)、4-6 月季后赛、7-9 月休赛期「本赛季」指刚结束赛季</td></tr>
+  <tr><td>season 传参口径</td><td>统一为赛季结束年(2024-25→2025),写死在提示词与全部工具描述里(实测曾错标,已修)</td></tr>
+  <tr><td>无年份指代</td><td>「G7/总决赛/上赛季」默认锚定最近发生该事件的赛季,先查证命中再作答,开头注明所指场次</td></tr>
+  <tr><td>未完场比赛</td><td>必须标注「比赛进行中」+ 当前节次比分,禁止终场口吻;追问时先说明数据实时变化再给最新比分(评测 K4 通过)</td></tr>
+</table>
+
+<h2 class="page-break">5. 可靠性与合规</h2>
+<h3>5.1 事实纪律(系统提示最高优先级)</h3>
+<ul>
+  <li>客观数字必须来自工具结果;<strong>记忆与工具冲突一律以工具为准</strong>(模型的篮球先验可能过时甚至属于另一个数据世界);</li>
+  <li>用户前提先查证:比分/日期/「某队夺冠过」先核实再作答或纠正;否定性结论(「没打过」)必须先查工具;</li>
+  <li>主观题数字纪律:分析/战术题中任何具体数字必须来自本轮工具结果,查不到只能定性表述;</li>
+  <li>禁止声称「已核实」而实际未调用工具;历史案例枚举宁少勿滥,严禁编「全部 N 次」清单。</li>
+</ul>
+<h3>5.2 合规红线(六类,先拒答不检索)</h3>
+<p>政治地缘/社会争议;场外隐私与绯闻;法律指控与司法细节;黑哨假球等无证据阴谋指控;博彩盘口与涉金钱预测;侮辱性绰号与人身攻击(用侮辱性绰号指代球员时不映射、不给数据)。正常篮球评价与不涉金钱的夺冠预测照常作答。<strong>评测 I1-I7(含「盘口包装」「造星阴谋包装」「绰号变体」等攻击变体)全部拦截,无一漏过。</strong></p>
+<h3>5.3 评测回路与结果(31 题,线上实测)</h3>
+<p>按笔试题型 A-I 出题并逐步扩充到 31 问,以 ESPN 直查为基准逐题核对档位;每轮修补后生产部署复测:</p>
+<table>
+  <tr><th style="width:26%">阶段</th><th style="width:18%">不合格数</th><th>说明</th></tr>
+  <tr><td>R1 首轮</td><td>11/24</td><td>提示词 v1:记忆污染大面积发作(编比分/编冠军/生涯赛季混读)</td></tr>
+  <tr><td>6 轮提示词修补</td><td>5/31</td><td>工具优先/无年份锚定/season 语义纠正/冠军强制倒查/禁虚假声明/清单纪律</td></tr>
+  <tr><td><strong>+get_champions 工具</strong></td><td><strong>2/31</strong></td><td>A2/C1/D1 三题转良好(见下);仅剩 F1/F2 观点题伪统计</td></tr>
+</table>
+<p>最终分布:优秀 6 / 良好 15 / 合格 5 / 不合格 2(F1「1-3 翻盘史」、F2「如何限制 SGA」——qwen-plus 在零工具可用的纯观点题上仍会编造精确统计,属模型级残留;切 qwen-max 可根治,见 §7)。</p>
+<div class="highlight">
+  <p><strong>亮点案例:一个提示词治不了、数据工具根治的问题。</strong>C1「雷霆上次夺冠」五轮提示词修补(含逐年倒查规则)均失败——模型的先验「雷霆零冠」压倒工具纪律,甚至编造 2025-26 总决赛赛程,最后一轮 12 步耗尽在逐日查询。根因是<strong>现有工具里根本没有「历年冠军」这个信息</strong>,提示词无法凭空注入先验。修复:新增 <code>get_champions</code> 工具(中文维基冠军列表,~3.2KB)+ 提示词强制冠军类先调它。一次调用 14.4s 答对(2025 年 4-3 胜步行者),连带治愈同根因的 A2(Siakam G7 数据)与 D1(25 分前提纠偏)。这条「先验污染 → 提示词到收益边界 → 数据工具根治」的路径,是本项目最有价值的工程经验。</p>
+</div>
+
+<h2>6. 成本核算</h2>
+<p>面试官备注明说「合理规划 token 使用 + 高性价比部署本身也是测试」,这里给出实测口径的完整测算。</p>
+<h3>6.1 用量实测</h3>
+<table>
+  <tr><th style="width:44%">项</th><th>实测值</th></tr>
+  <tr><td>单问工具循环轮次</td><td>约 5-8 轮(评测期 31 题均值约 7 轮)</td></tr>
+  <tr><td>单轮工具结果体积</td><td>1-8KB(压缩后),约 0.5-2K token</td></tr>
+  <tr><td>单问输入 token(含多轮累积上下文)</td><td>约 8-20K</td></tr>
+  <tr><td>单问输出 token</td><td>约 0.8-1.5K</td></tr>
+</table>
+<h3>6.2 单问与场景成本(qwen-plus 百炼单价:输入 ¥0.8/百万、输出 ¥2/百万)</h3>
+<table>
+  <tr><th style="width:22%">场景</th><th style="width:44%">计算</th><th>成本</th></tr>
+  <tr><td>单问(均值)</td><td>15K 输入 × 0.8/1M + 1.2K 输出 × 2/1M</td><td>≈ <strong>¥0.014</strong>(区间 ¥0.005-0.02)</td></tr>
+  <tr><td>本次评测期</td><td>31 题 + 复测 + A/B 约 50+ 次对话</td><td>&lt; ¥1</td></tr>
+  <tr><td>面试期预估</td><td>200 问 × ¥0.02 上界</td><td><strong>&lt; ¥5</strong></td></tr>
+  <tr><td>Vercel 部署</td><td>Hobby 免费档(Serverless,无常驻)</td><td><strong>¥0</strong></td></tr>
+  <tr><td><strong>月成本结论</strong></td><td>即使面试官与评审高频使用</td><td><strong>低于一杯咖啡</strong></td></tr>
+</table>
+<h3>6.3 成本控制手段与已知限制</h3>
+<ul>
+  <li><strong>压缩层</strong>是第一杠杆:500KB→1-8KB 直接把单轮工具结果压掉两个数量级,未压缩方案单问成本将放大 10 倍以上;</li>
+  <li><strong>限流 12 req/min/IP</strong>(内存令牌桶):防站方 key 被刷爆。已知限制:Serverless 多实例下仅单实例尽力而为,不构成全局保证——如实披露,不假装它是硬防护;</li>
+  <li>切 qwen-flash 档单价更低(约 plus 的 1/3),BYOK 档成本与站方无关;</li>
+  <li>不做内置 web_search 兜底的原因之一也是成本:搜索结果体积不可控,且与百炼 compatible-mode 混用受限。</li>
+</ul>
+
+<h2 class="page-break">7. 关键取舍</h2>
+<table>
+  <tr><th style="width:15%">决策</th><th style="width:26%">选择</th><th style="width:22%">放弃了什么</th><th>依据</th></tr>
+  <tr><td>key 策略</td><td>站方百炼 key 即开即用 + 站方自选 + BYOK 三档</td><td>纯 BYOK(参考产品做法)</td><td>评测官零摩擦是第一优先级;BYOK 作为兜底保留,三档线上验证 7 例全过</td></tr>
+  <tr><td>架构</td><td>Next.js 全栈单仓,轻后端</td><td>纯静态 + 浏览器直连</td><td>服务端取数规避 CORS/封锁;系统提示与限流必须在服务端;Vercel 一站部署</td></tr>
+  <tr><td>默认模型</td><td>qwen-plus</td><td>qwen-max 默认</td><td>A/B 实测(见下):plus 胜数据题,max 胜观点题;数据题占比与权重更高,默认 plus、把切换权交给用户</td></tr>
+  <tr><td>默认档时延</td><td>qwen-plus 10.7s(C1)vs qwen-max 8.2s(C1)</td><td>—</td><td>三档线上冒烟实测,max 步数更省反而更快</td></tr>
+  <tr><td>不做三语</td><td>仅简体中文</td><td>中英西三语(参考产品有)</td><td>笔试题只考中文;多语会稀释提示词预算与评测深度</td></tr>
+  <tr><td>不做 web_search 兜底</td><td>长尾问题按事实纪律答「暂无数据」</td><td>通用搜索</td><td>成本不可控、与 compatible-mode 混用受限、引入不可验证信源;「诚实说没有」优于「搜到什么算什么」</td></tr>
+  <tr><td>已知限制:大陆访问</td><td>vercel.app 域名大陆需代理</td><td>—</td><td>如实披露;评测官若无代理,可本地 <code>npm run dev</code> 或从站方自选档验证模型能力</td></tr>
+</table>
+<p><strong>qwen-plus vs qwen-max A/B(5 题,生产/本地对照):</strong></p>
+<table>
+  <tr><th style="width:24%">题</th><th style="width:38%">qwen-plus</th><th>qwen-max</th></tr>
+  <tr><td>A2 Siakam G7 数据</td><td>良好(37.3s)</td><td>不合格×2 复跑(先验拒绝 2025 决赛,误读工具结果)</td></tr>
+  <tr><td>C1 雷霆夺冠</td><td>良好(14.4s)</td><td>优秀(7.0s)</td></tr>
+  <tr><td>D1 25 分纠偏</td><td>良好(34.8s)</td><td>不合格(锚定 2019 猛龙后放弃)</td></tr>
+  <tr><td>F1 1-3 翻盘史</td><td>不合格(伪统计+虚称已核实)</td><td><strong>良好</strong>(15.1s,案例全真实零编造)</td></tr>
+  <tr><td>F2 限制 SGA</td><td>不合格(整页伪数据)</td><td><strong>良好</strong>(6.9s,全定性零编造)</td></tr>
+</table>
+<p>结论:<strong>各有盲区,没有全对的一方</strong>。max 根治观点题伪统计且更省步骤,但其篮球先验同样过时、且不会像 plus 一样用赛程链路兜底自证;plus 在占比更高的数据题上更稳。故默认 plus,设置面板一键切 max——把权衡透明地交给用户,而不是替用户赌一边。</p>
+
+<h2>8. 与参考产品的差异化对照</h2>
+<p>参考产品(nba.footoo.icu,官方给定的方案说明)是重要的对齐基准,差异点:</p>
+<table>
+  <tr><th style="width:16%">维度</th><th style="width:36%">参考产品</th><th>NBA Chat(本方案)</th></tr>
+  <tr><td>首次使用</td><td>需自配 API key(BYOK)</td><td><strong>即开即用</strong>(站方 key),BYOK 仅作兜底</td></tr>
+  <tr><td>成本披露</td><td>方案说明未给数字</td><td>完整核算表:单问 ¥0.005-0.02、面试期 &lt;¥5、月成本低于一杯咖啡(§6)</td></tr>
+  <tr><td>评测深度</td><td>—</td><td>31 题线上评测 + ESPN ground truth 逐题核对 + 6 轮修补回路全记录</td></tr>
+  <tr><td>先验污染应对</td><td>—</td><td>get_champions 数据工具根治「历年冠军」类幻觉(§5.3 亮点案例)</td></tr>
+  <tr><td>模型档位</td><td>单档</td><td>三档(默认/自选 qwen-*/BYOK)+ A/B 数据支撑选型</td></tr>
+  <tr><td>岗位契合</td><td>—</td><td>全栈跑在阿里云百炼(呼应岗位「基于阿里云模型做定制 agent」),Vercel 免费档零成本</td></tr>
+  <tr><td>取数位置</td><td>浏览器直连</td><td>服务端取数(规避 CORS/封锁)</td></tr>
+</table>
+<p><strong>不吹没做的</strong>:三语、着陆页演示回放等参考产品的全量特性未做(取舍见 §7);F1/F2 两题伪统计在默认档仍未根治(模型级,已定位并给出切档方案);大陆直连 vercel.app 需代理。以上均如实列出——把已知边界讲清楚,本身就是「事实可靠」这个产品主张的一部分。</p>
+
+<div class="footnote">交付物:线上链接 https://nba-chat.vercel.app · 本方案说明 · 仓库源码(README 含本地运行与部署步骤)· 评测全记录 <code>scripts/eval-results.md</code></div>
+<div class="foot">NBA Chat · 笔试题交付 · 2026-10</div>
+
+</body>
+</html>
