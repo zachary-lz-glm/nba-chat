@@ -1,28 +1,56 @@
 /* ============================================================
-   NBA Chat — 视觉系统 v3「克制」
-   公式:近黑画布分层 / 字重带 400-500 / 发丝线代替阴影 /
-        唯一强调色(提炼的 NBA 红)/ 宽阅读栏 / 零渐变零光晕
+   NBA Chat — 视觉系统 v4「纸」
+   v3 克制公式不变(字重 400-500 / 发丝线 / 单一同源红 / 宽栏),
+   画布换为 Claude 式暖米白纸色;系统深色偏好自动切回近黑。
    ============================================================ */
 
 :root {
-  --bg: #0d0d0f;                       /* 画布 */
-  --surface: #141417;                  /* 卡面:抽屉/用户气泡 */
-  --composer: #121215;                 /* 输入框:只比画布亮一档 */
-  --elevated: #1a1a1e;                 /* 弹层 */
-  --line: rgba(255, 255, 255, 0.07);   /* 发丝线 */
-  --line-strong: rgba(255, 255, 255, 0.13);
-  --text: #ececef;
-  --text-2: #a2a2ab;
-  --text-3: #6f6f79;
-  --accent: #b54a4a;                   /* 唯一强调色:全页同源的降饱和 NBA 红 */
-  --accent-hover: #c45c5c;
-  --accent-soft: rgba(181, 74, 74, 0.13);
+  color-scheme: light dark;
+
+  --bg: #faf9f7;                        /* 暖纸画布 */
+  --surface: #f1efe9;                   /* 卡面:用户气泡/抽屉 */
+  --composer: #ffffff;                  /* 输入卡:白,浮于纸上 */
+  --elevated: #ffffff;                  /* 弹层 */
+  --line: rgba(0, 0, 0, 0.09);          /* 发丝线 */
+  --line-faint: rgba(0, 0, 0, 0.06);
+  --line-strong: rgba(0, 0, 0, 0.16);
+  --hover: rgba(0, 0, 0, 0.04);
+  --text: #2e2d29;
+  --text-2: #6e6c64;
+  --text-3: #98968c;
+  --text-strong: #1d1c19;
+  --accent: #a84343;                    /* 唯一强调色:全页同源的降饱和 NBA 红 */
+  --accent-hover: #b95050;
+  --accent-soft: rgba(168, 67, 67, 0.10);
+  --accent-line: rgba(168, 67, 67, 0.45);
   --radius: 8px;
   --radius-lg: 12px;
-  --col: 46rem;                        /* 阅读栏 736px */
+  --col: 46rem;                         /* 阅读栏 736px */
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
   --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* 系统深色偏好 → v3 近黑 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d0d0f;
+    --surface: #141417;
+    --composer: #121215;
+    --elevated: #1a1a1e;
+    --line: rgba(255, 255, 255, 0.07);
+    --line-faint: rgba(255, 255, 255, 0.05);
+    --line-strong: rgba(255, 255, 255, 0.13);
+    --hover: rgba(255, 255, 255, 0.05);
+    --text: #ececef;
+    --text-2: #a2a2ab;
+    --text-3: #6f6f79;
+    --text-strong: #ffffff;
+    --accent: #b54a4a;
+    --accent-hover: #c45c5c;
+    --accent-soft: rgba(181, 74, 74, 0.13);
+    --accent-line: rgba(181, 74, 74, 0.5);
+  }
 }
 
 * { box-sizing: border-box; }
@@ -39,7 +67,7 @@ html, body {
   text-rendering: optimizeLegibility;
 }
 
-::selection { background: var(--accent-soft); color: var(--text); }
+::selection { background: var(--accent-soft); }
 
 button {
   font-family: inherit;
@@ -92,12 +120,12 @@ button {
   display: flex;
   align-items: baseline;
   gap: 5px;
+  flex: 1;
+  justify-content: center;
 }
 
 .nba-logo-nba { color: var(--accent); font-weight: 500; }
-.nba-sub {
-  display: none; /* v3:去「·」串联标语 */
-}
+.nba-sub { display: none; }
 
 .nba-icon-btn {
   display: inline-flex;
@@ -110,7 +138,7 @@ button {
   font-size: 13px;
   transition: background 0.15s ease, color 0.15s ease;
 }
-.nba-icon-btn:hover { background: rgba(255, 255, 255, 0.05); color: var(--text); }
+.nba-icon-btn:hover { background: var(--hover); color: var(--text); }
 
 .nba-settings-entry {
   width: auto;
@@ -120,9 +148,6 @@ button {
   font-size: 13px;
 }
 .nba-settings-entry:hover { color: var(--text); }
-
-/* 顶栏与设置按钮之间把标题推到视觉中心 */
-.nba-header h1 { flex: 1; justify-content: center; }
 
 .nba-burger {
   display: inline-flex;
@@ -187,7 +212,7 @@ button {
   flex-direction: column;
   gap: 0;
   width: 100%;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--line-faint);
 }
 
 .nba-suggest button {
@@ -198,10 +223,10 @@ button {
   font-size: 14px;
   font-weight: 400;
   color: var(--text-2);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--line-faint);
   transition: color 0.15s ease, padding-left 0.15s ease, background 0.15s ease;
 }
-.nba-suggest button:hover { color: var(--text); background: rgba(255, 255, 255, 0.025); }
+.nba-suggest button:hover { color: var(--text); background: var(--hover); }
 
 /* ---------- 消息 ---------- */
 
@@ -216,7 +241,7 @@ button {
   margin: 0;
   max-width: 85%;
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-faint);
   border-radius: 10px;
   padding: 9px 14px;
   font-size: 14.5px;
@@ -225,13 +250,11 @@ button {
   word-break: break-word;
 }
 
-.nba-msg-assist {
-  margin-top: 28px;
-}
+.nba-msg-assist { margin-top: 28px; }
 
 .nba-msg-bot { font-size: 15px; line-height: 1.75; }
 
-/* 流式光标:细竖线,不喧哗 */
+/* 流式光标 */
 .nba-msg-bot.streaming .nba-md > *:last-child::after {
   content: "";
   display: inline-block;
@@ -326,7 +349,7 @@ button {
   margin: 22px 0 8px;
   font-weight: 500;
   letter-spacing: -0.01em;
-  color: var(--text);
+  color: var(--text-strong);
 }
 .nba-md h1 { font-size: 18px; }
 .nba-md h2 { font-size: 16.5px; }
@@ -335,11 +358,11 @@ button {
 
 .nba-md strong, .nba-md b {
   font-weight: 500;
-  color: #fff;
+  color: var(--text-strong);
 }
 
-.nba-md a { color: var(--accent-hover); text-decoration: none; border-bottom: 1px solid rgba(181, 74, 74, 0.35); }
-.nba-md a:hover { color: #fff; border-bottom-color: #fff; }
+.nba-md a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+.nba-md a:hover { color: var(--text-strong); border-bottom-color: var(--text-strong); }
 
 .nba-md ul, .nba-md ol { margin: 10px 0; padding-left: 1.4em; }
 .nba-md li { margin: 4px 0; }
@@ -358,14 +381,14 @@ button {
   font-family: var(--mono);
   font-size: 0.86em;
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-faint);
   border-radius: 4px;
   padding: 1px 5px;
 }
 
 .nba-md pre {
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-faint);
   border-radius: var(--radius);
   padding: 12px 14px;
   overflow-x: auto;
@@ -392,16 +415,16 @@ button {
   color: var(--text-3);
   letter-spacing: 0.02em;
   padding: 0 12px 7px 0;
-  border-bottom: 1px solid rgba(181, 74, 74, 0.5);
+  border-bottom: 1px solid var(--accent-line);
   white-space: nowrap;
 }
 
 .nba-md tbody td {
   padding: 7px 12px 7px 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--line-faint);
   color: var(--text-2);
 }
-.nba-md tbody td strong { color: var(--text); }
+.nba-md tbody td strong { color: var(--text-strong); }
 
 /* 合计/小结行:语义化(首个单元格加粗引导) */
 .nba-md tbody tr:has(> td:first-child > strong:only-child) td {
@@ -420,9 +443,8 @@ button {
   max-width: var(--col);
   margin: 0 auto;
   display: flex;
-  align-items: flex-end;
-  gap: 10px;
   align-items: center;
+  gap: 10px;
   background: var(--composer);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -460,7 +482,12 @@ button {
 }
 .nba-send:hover:not(:disabled) { background: var(--accent-hover); }
 .nba-send:active:not(:disabled) { transform: scale(0.97); }
-.nba-send:disabled { background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line); color: var(--text-3); cursor: default; }
+.nba-send:disabled {
+  background: var(--hover);
+  border: 1px solid var(--line);
+  color: var(--text-3);
+  cursor: default;
+}
 
 .nba-stop {
   flex: none;
@@ -475,7 +502,7 @@ button {
   font-size: 13px;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
-.nba-stop:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.25); }
+.nba-stop:hover { color: var(--text); border-color: var(--text-3); }
 
 .nba-stop-icon {
   width: 8px;
@@ -489,7 +516,7 @@ button {
 .nba-error {
   margin-top: 20px;
   padding: 12px 16px;
-  border: 1px solid rgba(181, 74, 74, 0.4);
+  border: 1px solid var(--accent-line);
   border-radius: var(--radius);
   font-size: 13.5px;
   color: var(--text-2);
@@ -499,22 +526,25 @@ button {
 }
 .nba-error button {
   flex: none;
-  color: var(--accent-hover);
+  color: var(--accent);
   font-size: 13px;
   padding: 2px 8px;
-  border: 1px solid rgba(181, 74, 74, 0.4);
+  border: 1px solid var(--accent-line);
   border-radius: 6px;
 }
-.nba-error button:hover { color: #fff; border-color: var(--accent-hover); }
+.nba-error button:hover { color: #fff; background: var(--accent); border-color: var(--accent); }
 
 /* ---------- 会话抽屉 ---------- */
 
 .nba-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.32);
   z-index: 40;
   animation: nba-fade 0.16s ease;
+}
+@media (prefers-color-scheme: dark) {
+  .nba-overlay { background: rgba(0, 0, 0, 0.55); }
 }
 
 .nba-drawer {
@@ -554,7 +584,7 @@ button {
   border-radius: 6px;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
-.nba-btn:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.25); }
+.nba-btn:hover { color: var(--text); border-color: var(--text-3); }
 
 .nba-drawer-list {
   flex: 1;
@@ -573,8 +603,8 @@ button {
   color: var(--text-2);
   transition: background 0.12s ease, color 0.12s ease;
 }
-.nba-session-item:hover { background: rgba(255, 255, 255, 0.04); color: var(--text); }
-.nba-session-item.active { background: rgba(255, 255, 255, 0.05); color: var(--text); }
+.nba-session-item:hover { background: var(--hover); color: var(--text); }
+.nba-session-item.active { background: var(--hover); color: var(--text); }
 
 .nba-session-main { flex: 1; min-width: 0; }
 .nba-session-title {
@@ -595,7 +625,7 @@ button {
   transition: opacity 0.15s ease, color 0.15s ease;
 }
 .nba-session-item:hover .nba-session-del { opacity: 1; }
-.nba-session-del:hover { color: var(--accent-hover); }
+.nba-session-del:hover { color: var(--accent); }
 
 .nba-drawer-empty {
   padding: 32px 16px;
@@ -606,7 +636,10 @@ button {
 
 /* ---------- 设置弹窗 ---------- */
 
-.nba-dialog-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); z-index: 60; animation: nba-fade 0.16s ease; }
+.nba-dialog-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.32); z-index: 60; animation: nba-fade 0.16s ease; }
+@media (prefers-color-scheme: dark) {
+  .nba-dialog-overlay { background: rgba(0, 0, 0, 0.55); }
+}
 
 .nba-dialog {
   position: fixed;
@@ -639,7 +672,7 @@ button {
   color: var(--text-3);
   font-size: 14px;
 }
-.nba-dialog-close:hover { color: var(--text); background: rgba(255, 255, 255, 0.05); }
+.nba-dialog-close:hover { color: var(--text); background: var(--hover); }
 
 .nba-dialog label { display: block; font-size: 12.5px; color: var(--text-3); margin: 14px 0 6px; }
 
@@ -655,7 +688,7 @@ button {
   outline: none;
   transition: border-color 0.15s ease;
 }
-.nba-dialog input:focus, .nba-dialog select:focus { border-color: var(--line-strong); }
+.nba-dialog input:focus, .nba-dialog select:focus { border-color: var(--text-3); }
 
 /* 三档模式选择 */
 .nba-mode-fieldset { border: none; margin: 0; padding: 0; }
@@ -676,7 +709,7 @@ button {
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 .nba-mode-option:hover { border-color: var(--line-strong); }
-.nba-mode-option.selected { border-color: rgba(181, 74, 74, 0.55); background: var(--accent-soft); }
+.nba-mode-option.selected { border-color: var(--accent-line); background: var(--accent-soft); }
 .nba-mode-option input { width: auto; margin-top: 4px; accent-color: var(--accent); }
 .nba-mode-option .nba-mode-label { font-size: 13.5px; color: var(--text); }
 .nba-mode-option .nba-mode-desc { font-size: 12px; color: var(--text-3); margin-top: 2px; }
@@ -687,8 +720,8 @@ button {
   color: var(--text-3);
   min-height: 18px;
 }
-.nba-test-result.ok { color: #6dbb87; }
-.nba-test-result.fail { color: var(--accent-hover); }
+.nba-test-result.ok { color: #4a8b5f; }
+.nba-test-result.fail { color: var(--accent); }
 
 .nba-dialog-actions {
   display: flex;
@@ -707,7 +740,7 @@ button {
   transition: background 0.15s ease;
 }
 .nba-btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
-.nba-btn-primary:disabled { opacity: 0.35; cursor: default; }
+.nba-btn-primary:disabled { opacity: 0.4; cursor: default; }
 
 /* ---------- 移动端 ---------- */
 

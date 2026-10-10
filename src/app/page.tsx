@@ -87,8 +87,8 @@ export default function Home() {
         <SessionDrawer
           sessions={sessions}
           activeId={activeId}
-          onSelect={switchTo}
-          onNew={startNew}
+          onSelect={(id) => { switchTo(id); setDrawerOpen(false); }}
+          onNew={() => { startNew(); setDrawerOpen(false); }}
           onDelete={remove}
           onClose={() => setDrawerOpen(false)}
         />
