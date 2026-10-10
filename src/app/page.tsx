@@ -50,14 +50,14 @@ export default function Home() {
         <button type="button" className="nba-icon-btn" onClick={() => setDrawerOpen(true)} aria-label="会话列表">
           <span className="nba-burger" aria-hidden="true"><i /><i /><i /></span>
         </button>
-        <h1><span className="nba-logo-nba">NBA</span><span>Chat</span></h1>
+        <h1 aria-label="NBA Chat"><span className="nba-logo-nba">NBA</span><span>Chat</span></h1>
         <span className="nba-sub">官方风格智能问答 · 数据实时查证</span>
         <button type="button" className="nba-icon-btn nba-settings-entry" onClick={() => setSettingsOpen(true)}>设置</button>
       </header>
       <div className="nba-thread">
         {chat.messages.length === 0 && (
           <div className="nba-empty">
-            <div className="nba-empty-hero">
+            <div className="nba-empty-hero" aria-hidden="true">
               <span className="nba-empty-nba">NBA</span>
               <span className="nba-empty-chat">Chat</span>
             </div>
