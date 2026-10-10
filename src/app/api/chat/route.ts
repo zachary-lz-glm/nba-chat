@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       tools: nbaTools,
       stopWhen: stepCountIs(16),
       onFinish: ({ usage }) => {
-        console.log(JSON.stringify({ t: Date.now(), byok: !!body.config?.apiKey, usage }));
+        console.log(JSON.stringify({ t: Date.now(), byok: !!body.config && 'apiKey' in body.config, usage }));
       },
     });
     return result.toUIMessageStreamResponse({

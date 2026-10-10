@@ -23,4 +23,28 @@ describe('resolveModel', () => {
     const m: any = resolveModel({ baseURL: 'https://api.x.com/v1', model: 'gpt-x', apiKey: '' });
     expect(m.__provider).toBe('dashscope');
   });
+  it("mode:'site-default' → 站方默认 qwen-plus", () => {
+    const m: any = resolveModel({ mode: 'site-default' });
+    expect(m.__provider).toBe('dashscope');
+    expect(m.__model).toBe('qwen-plus');
+  });
+  it("mode:'site-model' 白名单命中 → 站方 key + 指定 qwen 模型", () => {
+    const m: any = resolveModel({ mode: 'site-model', model: 'qwen-max' });
+    expect(m.__provider).toBe('dashscope');
+    expect(m.__model).toBe('qwen-max');
+  });
+  it("mode:'site-model' 白名单不命中(非 qwen-*) → 忽略回落站方默认", () => {
+    const m: any = resolveModel({ mode: 'site-model', model: 'gpt-4o' });
+    expect(m.__provider).toBe('dashscope');
+    expect(m.__model).toBe('qwen-plus');
+  });
+  it("mode:'site-model' 空模型 → 回落站方默认", () => {
+    const m: any = resolveModel({ mode: 'site-model', model: '' });
+    expect(m.__model).toBe('qwen-plus');
+  });
+  it("mode:'byok' 显式结构 → 用户服务(与旧结构等价)", () => {
+    const m: any = resolveModel({ mode: 'byok', baseURL: 'https://api.x.com/v1', model: 'qwen-turbo', apiKey: 'k' });
+    expect(m.__baseURL).toBe('https://api.x.com/v1');
+    expect(m.__model).toBe('qwen-turbo');
+  });
 });

@@ -1189,6 +1189,60 @@ body {
   box-shadow: 0 0 0 3px rgba(77, 141, 240, 0.16);
 }
 
+.nba-mode-fieldset {
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-ctl);
+  padding: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.nba-mode-fieldset legend {
+  font-size: 0.78rem;
+  color: var(--ink-2);
+  letter-spacing: 0.03em;
+  padding: 0 0.3rem;
+}
+
+.nba-mode-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: calc(var(--r-ctl) - 2px);
+  cursor: pointer;
+  transition: border-color 0.25s var(--ease-out), background 0.25s var(--ease-out);
+}
+
+.nba-mode-option:hover {
+  background: var(--bg-3);
+}
+
+.nba-mode-option.active {
+  border-color: var(--blue-bright);
+  background: rgba(77, 141, 240, 0.08);
+}
+
+.nba-mode-option input {
+  margin-top: 0.2rem;
+  accent-color: var(--blue-bright);
+}
+
+.nba-mode-option span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.8rem;
+  color: var(--ink-1);
+}
+
+.nba-mode-option small {
+  color: var(--ink-2);
+  font-size: 0.72rem;
+}
+
 .nba-dialog-actions {
   display: flex;
   gap: 0.5rem;
