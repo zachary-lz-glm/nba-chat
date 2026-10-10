@@ -11,8 +11,9 @@ export function ToolStrip({ lookups }: { lookups: Lookup[] }) {
   const running = lookups.some((lookup) => lookup.state === 'running');
   const stopped = lookups.some((lookup) => lookup.state === 'stopped');
   const failed = lookups.some((lookup) => lookup.state === 'error');
+  const activeLookup = lookups.findLast((lookup) => lookup.state === 'running');
   return <details className="nba-tools">
-    <summary><span className={`nba-lookup-icon${running ? ' running' : ''}`}><Icon name={running ? 'clock' : failed ? 'close' : 'check'} width="14" height="14" /></span><span>{running ? '正在查询篮球数据' : failed ? '部分数据暂未取得' : stopped ? '查询已停止' : '已完成数据查询'}</span><span className="nba-tools-count">{lookups.length} 项<span aria-hidden="true">⌄</span></span></summary>
+    <summary><span className={`nba-lookup-icon${running ? ' running' : ''}`}><Icon name={running ? 'clock' : failed ? 'close' : 'check'} width="14" height="14" /></span><span role="status">{running ? `正在查看${NAMES[activeLookup?.name ?? ''] ?? '篮球记录'}` : failed ? '部分数据暂未取得' : stopped ? '查询已停止' : '已取得查询结果'}</span><span className="nba-tools-count">{lookups.length} 项<span aria-hidden="true">⌄</span></span></summary>
     <ul>{lookups.map((lookup, i) => <li key={`${lookup.name}-${i}`}><span>{NAMES[lookup.name] ?? '篮球资料'}</span><span className={`nba-lookup-${lookup.state}`}>{lookup.state === 'running' ? '查询中' : lookup.state === 'error' ? '暂不可用' : lookup.state === 'empty' ? '暂无比赛' : lookup.state === 'stopped' ? '已停止' : '已取得'}</span></li>)}</ul>
   </details>;
 }

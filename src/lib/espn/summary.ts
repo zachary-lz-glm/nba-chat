@@ -1,4 +1,5 @@
 import { fetchJson } from './client';
+import { fmtBeijing } from '../time';
 
 type FetchImpl = <T>(url: string) => Promise<T>;
 const url = (id: string) => `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${id}`;
@@ -90,11 +91,14 @@ export async function getGameMeta(eventId: string, fetchImpl?: FetchImpl) {
   const c = s.header?.competitions?.[0];
   const home = c?.competitors?.find((x: any) => x.homeAway === 'home');
   const away = c?.competitors?.find((x: any) => x.homeAway === 'away');
+  const tipoff = Date.parse(c?.date ?? s.header?.date ?? '');
   return {
     gameId: eventId,
     homeAbbr: home?.team?.abbreviation ?? '', awayAbbr: away?.team?.abbreviation ?? '',
     homeScore: home?.score ?? null, awayScore: away?.score ?? null,
+    homeTeam: home?.team?.displayName ?? '', awayTeam: away?.team?.displayName ?? '',
+    tipoffBeijing: Number.isFinite(tipoff) ? fmtBeijing(tipoff) : '',
     status: c?.status?.type?.description ?? '',
-    note: c?.notes?.[0]?.note ?? null,
+    note: c?.notes?.[0]?.headline ?? c?.notes?.[0]?.note ?? null,
   };
 }

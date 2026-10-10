@@ -1,36 +1,23 @@
-import { getToolName, isToolUIPart, type UIMessage } from 'ai';
-import { z } from 'zod';
+'use client';
+import { useState } from 'react';
+import type { UIMessage } from 'ai';
+import { gameDate, quarterLabel, readBasketball, teamName, timelineLabel, type GameCard as Game } from '@/lib/client/basketball';
+import { GameCard } from './GameCard';
+import { Icon } from '../ui/Icon';
 
-const gameSchema = z.object({
-  id: z.string(), homeAbbr: z.string(), awayAbbr: z.string(), homeTeam: z.string(), awayTeam: z.string(),
-  homeScore: z.number().nullable(), awayScore: z.number().nullable(), tipoffBeijing: z.string(), status: z.string(), seasonLabel: z.string().nullable(),
-});
-const gamesSchema = z.object({ games: z.array(gameSchema) });
-const statsSchema = z.object({
-  seasonLogSummary: z.array(z.object({ group: z.string(), gp: z.number(), avgPTS: z.number().nullable(), avgREB: z.number().nullable(), avgAST: z.number().nullable() })),
-});
-
-/** Render only structured, successfully returned data; never parse model prose. */
-export function DataCards({ parts }: { parts: UIMessage['parts'] }) {
-  const tools = parts.filter(isToolUIPart).filter((part) => part.state === 'output-available');
-  const schedule = tools.find((part) => getToolName(part) === 'get_games_by_date');
-  const games = schedule?.state === 'output-available' ? gamesSchema.safeParse(schedule.output) : undefined;
-  const player = tools.find((part) => getToolName(part) === 'get_player_stats');
-  const stats = player?.state === 'output-available' ? statsSchema.safeParse(player.output) : undefined;
+export function DataCards({ parts, context, busy = false, onAsk }: { parts: UIMessage['parts']; context?: Game | null; busy?: boolean; onAsk?: (text: string) => void }) {
+  const data = readBasketball(parts);
+  const [expanded, setExpanded] = useState(false);
+  const timeline = data.timeline;
+  const match = timeline ? data.games.find((game) => game.id === timeline.gameId) ?? (context?.id === timeline.gameId ? context : undefined) : data.match;
+  const plays = timeline?.plays ?? [];
+  const visible = expanded ? plays : plays.slice(0, 6);
+  const timelineTitle = timelineLabel(timeline?.period, timeline?.lastSeconds);
+  const single = data.match ?? (data.games.length === 1 ? data.games[0] : undefined);
   return <>
-    {games?.success && <section className="nba-data-panel" aria-label="查询到的赛程"><div className="nba-data-heading"><span>赛程速览</span><span>北京时间</span></div>
-      {games.data.games.length === 0 ? <p className="nba-data-empty">查询日期暂无比赛记录。</p> : <div className="nba-game-grid">{games.data.games.slice(0, 6).map((game) => <article className="nba-game" key={game.id}>
-        <div className="nba-game-meta"><span>{game.seasonLabel ?? 'NBA'}</span><span>{game.status === 'Final' ? '已结束' : game.status === 'Scheduled' ? '未开始' : game.status === 'In Progress' ? '进行中' : game.status}</span></div>
-        <div className="nba-game-team"><abbr title={game.awayTeam}>{game.awayAbbr}</abbr><span>{game.awayScore ?? '—'}</span></div>
-        <div className="nba-game-team"><abbr title={game.homeTeam}>{game.homeAbbr}</abbr><span>{game.homeScore ?? '—'}</span></div>
-        <div className="nba-game-time">{game.tipoffBeijing}</div>
-      </article>)}</div>}
-      {games.data.games.length > 6 && <p className="nba-data-empty">共 {games.data.games.length} 场比赛，其余见下方回答。</p>}
-      <p className="nba-data-source">赛事数据 · ESPN · 比分与状态以本次查询为准</p>
-    </section>}
-    {stats?.success && stats.data.seasonLogSummary.length > 0 && <section className="nba-data-panel" aria-label="查询到的球员场均数据">
-      {stats.data.seasonLogSummary.map((group) => <div key={group.group}><div className="nba-data-heading"><span>球员场均 · {group.group}</span><span>{group.gp} 场</span></div><div className="nba-stat-grid">{[['得分 / PTS', group.avgPTS], ['篮板 / REB', group.avgREB], ['助攻 / AST', group.avgAST]].map(([label, value]) => <div key={label}><strong>{value == null ? '—' : value}</strong><span>{label}</span></div>)}</div></div>)}
-      <p className="nba-data-source">球员数据 · ESPN · 根据查询到的逐场记录汇总</p>
-    </section>}
+    {single ? <GameCard game={single} /> : data.games.length > 0 && <section className="nba-data-panel" aria-label="查询到的赛程"><div className="nba-data-heading"><span>赛程速览 · {data.games.length} 场</span><span>北京时间</span></div><div className="courtside-game-list">{data.games.slice(0, 12).map((game) => <GameCard key={game.id} game={game} compact onAsk={onAsk} busy={busy} />)}</div>{data.games.length > 12 && <p className="nba-data-empty">其余场次见下方回答。</p>}</section>}
+    {data.player && <section className="nba-data-panel" aria-label="球员场均数据"><div className="courtside-card-header"><div><p className="courtside-card-kicker">球员档案</p><h3 className="courtside-player-name">{data.player.profile.name}</h3></div><span className="courtside-player-meta">{data.player.season ? `${data.player.season - 1}-${String(data.player.season).slice(-2)} 赛季` : '查询赛季'}</span></div>{data.player.seasonLogSummary.map((group) => <div key={group.group}><div className="nba-data-heading"><span>场均 · {group.group === 'Regular Season' ? '常规赛' : group.group === 'Postseason' ? '季后赛' : group.group}</span><span>{group.gp} 场</span></div><div className="nba-stat-grid">{[['得分 / PTS', group.avgPTS], ['篮板 / REB', group.avgREB], ['助攻 / AST', group.avgAST]].map(([label, value]) => <div key={label}><strong>{value == null ? '—' : value}</strong><span>{label}</span></div>)}</div></div>)}<p className="nba-data-source">根据本次查询到的逐场记录汇总。</p></section>}
+    {!!data.box?.length && <details className="nba-data-panel courtside-box"><summary className="nba-data-heading"><span>两队主要球员数据</span><span>查看统计 ⌄</span></summary>{data.box.map((team) => <div className="courtside-box-scroll" key={team.abbr}><table><caption>{teamName(team.abbr)} · 本次查询到的出场球员</caption><thead><tr><th>球员</th><th>分钟</th><th>得分</th><th>篮板</th><th>助攻</th></tr></thead><tbody>{team.players.map((player) => <tr key={player.name}><td>{player.name}</td><td>{player.min}</td><td>{player.pts}</td><td>{player.reb}</td><td>{player.ast}</td></tr>)}</tbody></table></div>)}</details>}
+    {timeline && <section className="nba-data-panel courtside-timeline" aria-label="关键回合时间线"><div className="courtside-timeline-heading"><div><p className="courtside-card-kicker">PLAY BY PLAY</p><h3>{timelineTitle}</h3></div><span>{plays.length} 条记录{timeline.scoringOnly ? ' · 仅得分回合' : ''}</span></div><p className="nba-data-source">{match ? `比分顺序：${teamName(match.homeAbbr)}（主队）— ${teamName(match.awayAbbr)}（客队）` : '比分顺序：主队 — 客队'} · 事件保留赛事记录原文</p>{plays.length === 0 ? <p className="nba-data-empty">本次查询范围暂无逐回合记录，可换一个时间段。</p> : <ol className="courtside-play-list">{visible.map((play, index) => <li className="courtside-play" key={`${play.quarter}-${play.clock}-${index}`}><div className="courtside-play-time"><span>{quarterLabel(play.quarter)}</span><strong>{play.clock}</strong></div><div className="courtside-play-copy"><p>{play.text}</p><span>此回合后 {play.score.replace('-', ' : ')}</span></div>{onAsk && match && gameDate(match) && <button type="button" className="courtside-play-ask" disabled={busy} aria-label={`追问${quarterLabel(play.quarter)}剩余${play.clock}的回合`} onClick={() => onAsk(`请解释北京时间${gameDate(match)} ${teamName(match.awayAbbr)}对${teamName(match.homeAbbr)}比赛中，${quarterLabel(play.quarter)}剩余${play.clock}时的回合「${play.text}」，根据这场逐回合记录核对参与球员与当时比分。`)}><Icon name="arrow" width="16" height="16" /></button>}</li>)}</ol>}{plays.length > 6 && <button type="button" className="courtside-timeline-more" onClick={() => setExpanded(!expanded)}>{expanded ? '收起记录' : `展开全部 ${plays.length} 条记录`}<Icon name="down" width="14" height="14" /></button>}</section>}
   </>;
 }
