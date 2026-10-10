@@ -4,6 +4,7 @@ import { nbaTools } from '@/lib/ai/tools';
 import { buildSystemPrompt } from '@/lib/ai/prompt';
 import { resolveModel, type ClientModelConfig } from '@/lib/ai/model';
 import { allowRequest } from '@/lib/rl';
+import { needsLookup } from '@/lib/ai/lookup-policy';
 import { createEmojiStripSseStream } from '@/lib/ai/emoji';
 
 export const maxDuration = 60;
@@ -28,6 +29,12 @@ export async function POST(req: Request) {
       messages: await convertToModelMessages(body.messages),
       tools: nbaTools,
       stopWhen: stepCountIs(16),
+      abortSignal: req.signal,
+      prepareStep: ({ stepNumber }) => {
+        const lastUser = body.messages.findLast((message) => message.role === 'user');
+        const text = lastUser?.parts.filter((part) => part.type === 'text').map((part) => part.text).join(' ') ?? '';
+        return { toolChoice: stepNumber === 0 && needsLookup(text) ? 'required' : 'auto' };
+      },
       onFinish: ({ usage }) => {
         console.log(JSON.stringify({ t: Date.now(), byok: !!body.config && 'apiKey' in body.config, usage }));
       },

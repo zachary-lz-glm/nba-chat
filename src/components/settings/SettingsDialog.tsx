@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { getClientConfig, setClientConfig } from '@/lib/client/config';
 import type { ClientModelConfig } from '@/lib/ai/model';
+import { useModal } from '@/lib/client/useModal';
+import { Icon } from '../ui/Icon';
 
 type Mode = 'site-default' | 'site-model' | 'byok';
 type ByokPreset = 'bailian' | 'custom';
@@ -10,12 +12,13 @@ const BAILIAN_BASE = 'https://dashscope.aliyuncs.com/compatible-mode/v1';
 const SITE_MODELS = ['qwen-flash', 'qwen-plus', 'qwen-max'];
 
 const MODES: Array<{ value: Mode; label: string; hint: string }> = [
-  { value: 'site-default', label: '站方默认', hint: 'qwen-plus,无需任何配置' },
-  { value: 'site-model', label: '站方线路自选模型', hint: 'qwen-flash / qwen-plus / qwen-max' },
-  { value: 'byok', label: '自定义 OpenAI 兼容', hint: '自备 Base URL / 模型 / API Key' },
+  { value: 'site-default', label: '站方默认', hint: '无需配置，直接开始对话' },
+  { value: 'site-model', label: '选择回答模型', hint: 'qwen-flash / qwen-plus / qwen-max' },
+  { value: 'byok', label: '使用自己的服务', hint: '自备 Base URL / 模型 / API Key' },
 ];
 
-export function SettingsDialog({ onClose }: { onClose: () => void }) {
+export function SettingsDialog({ onClose, onSave }: { onClose: () => void; onSave: (config: ClientModelConfig | null) => void }) {
+  const modalRef = useModal<HTMLDivElement>(onClose);
   const saved = getClientConfig();
   // 旧版 BYOK 结构无 mode(config.ts 读时已归一为 byok,此处双保险)
   const savedMode: Mode = !saved ? 'site-default' : 'mode' in saved ? saved.mode : 'byok';
@@ -45,7 +48,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
   };
 
   const applyPreset = (p: ByokPreset) => {
-    setPreset(p);
+    setPreset(p); setResult(null);
     if (p === 'bailian') setForm((f) => ({ ...f, name: 'bailian', baseURL: BAILIAN_BASE, model: 'qwen-plus' }));
   };
 
@@ -75,22 +78,22 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
     const config = currentConfig();
     if (!config) return;
     setClientConfig(config);
-    location.reload(); // 重建 transport 使新 config 生效
+    onSave(config);
   };
 
   const reset = () => {
     setClientConfig(null);
-    location.reload();
+    onSave(null);
   };
 
   return (
     <div className="nba-dialog-overlay" onClick={onClose}>
-      <div className="nba-dialog" role="dialog" aria-label="模型设置" onClick={(e) => e.stopPropagation()}>
-        <h2>模型设置</h2>
+      <div ref={modalRef} className="nba-dialog" role="dialog" aria-modal="true" aria-labelledby="nba-settings-title" tabIndex={-1} onClick={(e) => e.stopPropagation()}>
+        <p className="nba-eyebrow">PREFERENCES</p><h2 id="nba-settings-title">让回答更适合你</h2><p className="nba-dialog-intro">选择模型服务，新设置将用于后续提问。</p>
         <fieldset className="nba-mode-fieldset">
           <legend>模型档位</legend>
           {MODES.map((m) => (
-            <label key={m.value} className={`nba-mode-option${mode === m.value ? ' active' : ''}`}>
+            <label key={m.value} className={`nba-mode-option${mode === m.value ? ' selected' : ''}`}>
               <input
                 type="radio"
                 name="nba-mode"
@@ -98,8 +101,8 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
                 onChange={() => { setMode(m.value); setResult(null); }}
               />
               <span>
-                <b>{m.label}</b>
-                <small>{m.hint}</small>
+                <span className="nba-mode-label">{m.label}</span>
+                <span className="nba-mode-desc">{m.hint}</span>
               </span>
             </label>
           ))}
@@ -137,11 +140,11 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
         )}
         <div className="nba-dialog-actions">
           <button type="button" className="nba-btn" onClick={test} disabled={testing || !currentConfig()}>{testing ? '测试中…' : '测试连接'}</button>
-          <button type="button" className="nba-btn primary" onClick={save} disabled={!currentConfig()}>保存并生效</button>
-          <button type="button" className="nba-btn ghost" onClick={reset}>恢复站方默认</button>
+          <button type="button" className="nba-btn-primary" onClick={save} disabled={!currentConfig()}>保存并生效</button>
+          <button type="button" className="nba-btn nba-btn-ghost" onClick={reset}>恢复站方默认</button>
         </div>
-        {result && <p className={`nba-test-result${result.ok ? ' ok' : ' fail'}`}>{result.text}</p>}
-        <button type="button" className="nba-dialog-close" onClick={onClose}>关闭</button>
+        {result && <p role="status" className={`nba-test-result${result.ok ? ' ok' : ' fail'}`}>{result.text}</p>}
+        <button type="button" className="nba-dialog-close nba-icon-btn" onClick={onClose} aria-label="关闭设置"><Icon name="close" /></button>
       </div>
     </div>
   );

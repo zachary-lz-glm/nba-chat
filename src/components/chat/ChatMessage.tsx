@@ -1,50 +1,31 @@
 'use client';
-import { getToolName, isToolUIPart, type UIMessage } from 'ai';
+import type { UIMessage } from 'ai';
 import { useState } from 'react';
+import { getLookups } from '@/lib/client/tool-status';
 import { Markdown } from './Markdown';
 import { ToolStrip } from './ToolStrip';
+import { DataCards } from './DataCards';
+import { Icon } from '../ui/Icon';
 
 export function ChatMessage({ message, elapsed, streaming }: { message: UIMessage; elapsed?: number; streaming?: boolean }) {
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle');
   const copy = async () => {
-    const text = message.parts.filter((p): p is Extract<typeof p, { type: 'text' }> => p.type === 'text')
-      .map((p) => p.text).join('\n');
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    } catch { /* 剪贴板不可用时静默 */ }
+    const text = message.parts.filter((part) => part.type === 'text').map((part) => part.text).join('\n');
+    try { await navigator.clipboard.writeText(text); setCopyState('copied'); }
+    catch { setCopyState('error'); }
+    setTimeout(() => setCopyState('idle'), 2000);
   };
-
-  if (message.role === 'user') {
-    return <div className="nba-msg-user">{message.parts.map((p, i) => p.type === 'text' ? <p key={i}>{p.text}</p> : null)}</div>;
-  }
-  // ai v7:静态工具 part 的 type 为 `tool-${NAME}`(无 toolName 字段),dynamic 为 'dynamic-tool'。
-  // 统一用包导出的 isToolUIPart / getToolName 处理;"仍在流式输入"对应 state === 'input-streaming'。
-  const toolNames = message.parts.filter(isToolUIPart).map(getToolName);
-  const running = message.parts.some((p) => isToolUIPart(p) && p.state === 'input-streaming');
-  const hasText = message.parts.some((p) => p.type === 'text' && p.text.length > 0);
-  return (
-    <div className="nba-msg-assist">
-      <div className={`nba-msg-bot${streaming && hasText ? ' streaming' : ''}`}>
-        <ToolStrip toolNames={[...new Set(toolNames)]} running={running} />
-        {message.parts.map((p, i) => {
-          if (p.type === 'text') return <Markdown key={i} content={p.text} />;
-          return null; // 工具类 part 不在正文渲染(状态条已呈现)
-        })}
-        {/* 等待首 token:输入中三点 */}
-        {!hasText && !toolNames.length && (
-          <span className="nba-typing" role="status" aria-label="正在思考"><i /><i /><i /></span>
-        )}
-      </div>
-      {(hasText || elapsed != null) && (
-        <div className="nba-msg-meta">
-          <button type="button" className={`nba-copy${copied ? ' copied' : ''}`} onClick={copy} aria-label="复制回答">
-            {copied ? '已复制' : '复制'}
-          </button>
-          {elapsed != null && <span className="nba-elapsed">{(elapsed / 1000).toFixed(1)}s</span>}
-        </div>
-      )}
+  if (message.role === 'user') return <article className="nba-msg-user" aria-label="你的问题">{message.parts.map((part, i) => part.type === 'text' ? <p key={i}>{part.text}</p> : null)}</article>;
+  const lookups = getLookups(message.parts, !!streaming);
+  const hasText = message.parts.some((part) => part.type === 'text' && part.text.length > 0);
+  return <article className="nba-msg-assist" aria-label="NBA Chat 的回答" aria-busy={streaming}>
+    <div className="nba-assist-label"><span className="nba-assist-mark"><Icon name="ball" width="15" height="15" /></span>NBA CHAT<span>比赛解读</span></div>
+    <ToolStrip lookups={lookups} /><DataCards parts={message.parts} />
+    <div className={`nba-msg-bot${streaming && hasText ? ' streaming' : ''}`}>
+      {message.parts.map((part, i) => part.type === 'text' ? <Markdown key={i} content={part.text} /> : null)}
+      {!hasText && !lookups.length && streaming && <span className="nba-typing" role="status" aria-label="正在整理回答"><i /><i /><i /></span>}
+      {!hasText && !streaming && !lookups.length && <p className="nba-interrupted">回答已停止。你可以继续追问。</p>}
     </div>
-  );
+    {hasText && <div className="nba-msg-meta"><button type="button" className={`nba-copy ${copyState}`} onClick={copy}><Icon name={copyState === 'copied' ? 'check' : 'copy'} width="14" height="14" />{copyState === 'copied' ? '已复制' : copyState === 'error' ? '复制失败，请重试' : '复制回答'}</button>{elapsed != null && <span>{(elapsed / 1000).toFixed(1)} 秒</span>}</div>}
+  </article>;
 }

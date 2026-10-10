@@ -1,30 +1,36 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { Icon } from '../ui/Icon';
 
-export function Composer({ onSend, onStop, streaming }: {
-  onSend: (text: string) => void; onStop: () => void; streaming: boolean;
+export function Composer({ onSend, onStop, busy, hasMessages }: {
+  onSend: (text: string) => void; onStop: () => void; busy: boolean; hasMessages: boolean;
 }) {
   const [text, setText] = useState('');
-  const [ime, setIme] = useState(false);
   const ref = useRef<HTMLTextAreaElement>(null);
-  const send = () => { const t = text.trim(); if (!t || streaming) return; onSend(t); setText(''); };
+  const composing = useRef(false);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 180)}px`;
+  }, [text]);
+  const send = () => {
+    const value = text.trim();
+    if (!value || busy) return;
+    onSend(value); setText(''); ref.current?.focus();
+  };
   return (
     <div className="nba-composer">
-      <div className="nba-composer-shell">
-        <textarea
-          ref={ref}
-          rows={2}
-          value={text}
-          placeholder="问我任何 NBA 数据"
+      <form className="nba-composer-shell" onSubmit={(e) => { e.preventDefault(); send(); }}>
+        <textarea ref={ref} rows={1} value={text} aria-label="输入 NBA 问题" placeholder={hasMessages ? '继续追问，或聊聊下一场比赛…' : '想了解哪场比赛、哪位球员？'}
           onChange={(e) => setText(e.target.value)}
-          onCompositionStart={() => setIme(true)}
-          onCompositionEnd={() => setIme(false)}
-          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !ime) { e.preventDefault(); send(); } }}
-        />
-        {streaming
-          ? <button className="nba-stop" onClick={onStop} aria-label="停止生成"><span className="nba-stop-icon" aria-hidden="true" />停止</button>
-          : <button className="nba-send" onClick={send} disabled={!text.trim()} aria-label="发送">发送</button>}
-      </div>
+          onCompositionStart={() => { composing.current = true; }} onCompositionEnd={() => { composing.current = false; }}
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !composing.current && !e.nativeEvent.isComposing && e.keyCode !== 229) { e.preventDefault(); send(); } }} />
+        {busy
+          ? <button type="button" className="nba-stop" onClick={onStop} aria-label="停止生成"><Icon name="stop" /></button>
+          : <button type="submit" className="nba-send" disabled={!text.trim()} aria-label="发送问题"><Icon name="arrow" /></button>}
+      </form>
+      <div className="nba-composer-foot"><span>数据有依据，观点留给你。</span><span className="nba-shortcut"><kbd>Enter</kbd> 发送 · <kbd>Shift Enter</kbd> 换行</span></div>
     </div>
   );
 }
