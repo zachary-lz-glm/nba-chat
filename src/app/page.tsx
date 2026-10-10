@@ -1,7 +1,7 @@
 'use client';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { Composer } from '@/components/chat/Composer';
 import { SessionDrawer } from '@/components/sessions/SessionDrawer';
@@ -41,6 +41,8 @@ export default function Home() {
   }, [chat.messages]);
 
   const { sessions, activeId, switchTo, startNew, remove } = useSessions(chat);
+  // 切换会话后,上一会话最新气泡的耗时不再适用,重置
+  useEffect(() => { setElapsed(undefined); }, [activeId]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 

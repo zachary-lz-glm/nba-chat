@@ -84,7 +84,7 @@ export const nbaTools = {
   }),
   get_standings: tool({
     description: '查常规赛排名(东部/西部)。season 为该赛季结束年:2024-25 赛季传 2025、2025-26 传 2026、2026-27 传 2027。',
-    inputSchema: z.object({ season: z.number().describe('赛季起始年,如 2025') }),
+    inputSchema: z.object({ season: z.number().describe('赛季结束年:2024-25 赛季传 2025') }),
     execute: async ({ season }, ctx) => {
       try { return { conferences: await getStandings(season, fetchOf(ctx)) }; } catch { return fail; }
     },
@@ -116,7 +116,7 @@ export const nbaTools = {
     },
   }),
   get_player_gamelog: tool({
-    description: '按球员 ID 查某赛季逐场数据(分组标注常规赛/季后赛,Postseason 组包含总决赛场次;6 月对阵同一对手的 4-7 场即总决赛)+ summary 分组建场均(GP/avgPTS/avgREB/avgAST)。用于连胜连败、场均推导、某场具体表现、判断球员打过哪些轮次(按日期+对手逐行核对,勿凭印象)。season 为该赛季结束年:2024-25 赛季传 2025、2025-26 传 2026、2026-27 传 2027。',
+    description: '按球员 ID 查某赛季逐场数据(分组标注常规赛/季后赛,Postseason 组包含总决赛场次;6 月对阵同一对手的 4-7 场即总决赛)+ summary 分组建场均(GP/avgPTS/avgREB/avgAST)。用于连胜连败、场均推导、某场具体表现、判断球员打过哪些轮次(按日期+对手逐行核对,勿凭印象)。season 为该赛季结束年:2024-25 赛季传 2025、2025-26 传 2026、2026-27 传 2027;不传 season 默认查询当前赛季(2025-26)。',
     inputSchema: z.object({ player_id: z.number(), season: z.number().optional() }),
     execute: async (a, ctx) => {
       try {

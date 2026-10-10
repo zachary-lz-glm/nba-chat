@@ -1,7 +1,12 @@
 import { generateText } from 'ai';
 import { resolveModel, type ClientModelConfig } from '@/lib/ai/model';
+import { allowRequest } from '@/lib/rl';
 
 export async function POST(req: Request) {
+  const ip = (req.headers.get('x-forwarded-for') ?? 'local').split(',')[0].trim();
+  if (!allowRequest(ip)) {
+    return Response.json({ error: '请求过于频繁,请稍后再试。' }, { status: 429 });
+  }
   try {
     const { config } = (await req.json()) as { config?: ClientModelConfig };
     const model = resolveModel(config);
