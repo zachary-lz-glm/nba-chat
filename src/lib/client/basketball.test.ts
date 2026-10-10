@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { UIMessage } from 'ai';
-import { findCurrentGame, gameQuestion, quarterLabel, readBasketball, timelineLabel } from './basketball';
+import { findCurrentGame, gameAction, gamePhase, gameQuestion, quarterLabel, readBasketball, selectFeaturedGame, timelineLabel } from './basketball';
 
 const game = { id: '401766128', homeAbbr: 'OKC', awayAbbr: 'IND', homeTeam: 'Oklahoma City Thunder', awayTeam: 'Indiana Pacers', homeScore: 103, awayScore: 91, tipoffBeijing: '2025-06-23 08:00', status: 'Final', seasonLabel: '2024-25 季后赛', note: null };
 function output(name: string, data: unknown, input: unknown = {}): UIMessage['parts'][number] {
@@ -9,6 +9,28 @@ function output(name: string, data: unknown, input: unknown = {}): UIMessage['pa
 const message = (parts: UIMessage['parts']): UIMessage => ({ id: 'm', role: 'assistant', parts });
 
 describe('basketball facts shown in the interface', () => {
+  it('prioritizes live and upcoming games over earlier finished games', () => {
+    const upcoming = { ...game, id: 'upcoming', status: 'Scheduled' };
+    const live = { ...game, id: 'live', status: 'In Progress' };
+    expect(selectFeaturedGame([game, upcoming, live])?.id).toBe('live');
+    expect(selectFeaturedGame([game, upcoming])?.id).toBe('upcoming');
+    expect(selectFeaturedGame([game, { ...game, id: 'last' }])?.id).toBe('last');
+    expect(selectFeaturedGame([])).toBeUndefined();
+  });
+  it('asks about live progress instead of inventing a final result', () => {
+    const live = { ...game, status: 'In Progress' };
+    expect(gamePhase(live)).toBe('live');
+    expect(gameAction(live).intent).toBe('live');
+    expect(gameQuestion(live, 'live')).toContain('不把进行中的比赛当作已结束');
+  });
+  it('uses pre-game queries and treats postponed games as unavailable', () => {
+    expect(gameAction({ ...game, status: 'Scheduled' }).intent).toBe('preview');
+    for (const status of ['Postponed', 'Canceled', 'Cancelled', 'Unknown']) expect(gameAction({ ...game, status }).intent).toBe('schedule');
+    expect(gameQuestion(game, 'form')).toContain('不提供尚未发生的本场技术统计');
+  });
+  it('keeps overtime finals eligible for recap', () => {
+    expect(gameAction({ ...game, status: 'Final/2OT' }).intent).toBe('recap');
+  });
   it('does not render invented prose, tool failures or malformed scores', () => {
     expect(readBasketball([{ type: 'text', text: '雷霆 103-91 步行者' }]).games).toEqual([]);
     expect(readBasketball([output('get_games_by_date', { error: 'unavailable' })]).games).toEqual([]);

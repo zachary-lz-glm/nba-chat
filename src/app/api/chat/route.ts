@@ -1,9 +1,11 @@
-import { streamText, convertToModelMessages, stepCountIs } from 'ai';
+import { createUIMessageStreamResponse, streamText, convertToModelMessages, stepCountIs } from 'ai';
 import type { UIMessage } from 'ai';
 import { nbaTools } from '@/lib/ai/tools';
 import { buildSystemPrompt } from '@/lib/ai/prompt';
 import { resolveModel, type ClientModelConfig } from '@/lib/ai/model';
 import { allowRequest } from '@/lib/rl';
+import { createVerifiedStatsStream, isStatsOnlyQuestion, verifiedStatsText } from '@/lib/ai/verified-stats';
+import { nextMatchEvidenceTool } from '@/lib/ai/match-evidence';
 import { needsLookup } from '@/lib/ai/lookup-policy';
 import { createEmojiStripSseStream } from '@/lib/ai/emoji';
 
@@ -22,26 +24,28 @@ export async function POST(req: Request) {
   try { model = resolveModel(body.config); } catch (e) {
     return Response.json({ error: e instanceof Error ? e.message : '模型配置错误' }, { status: 503 });
   }
+  const lastUser = body.messages.findLast((message) => message.role === 'user');
+  const text = lastUser?.parts.filter((part) => part.type === 'text').map((part) => part.text).join(' ') ?? '';
+  const statsOnly = isStatsOnlyQuestion(text);
   try {
     const result = streamText({
       model,
       system: buildSystemPrompt(Date.now()),
       messages: await convertToModelMessages(body.messages),
       tools: nbaTools,
-      stopWhen: stepCountIs(16),
+      stopWhen: [stepCountIs(16), ({ steps }) => statsOnly && steps.at(-1)?.toolResults.some((result) => result.toolName === 'get_game_box' && !!verifiedStatsText(result.output)) === true],
       abortSignal: req.signal,
-      prepareStep: ({ stepNumber }) => {
-        const lastUser = body.messages.findLast((message) => message.role === 'user');
-        const text = lastUser?.parts.filter((part) => part.type === 'text').map((part) => part.text).join(' ') ?? '';
+      prepareStep: ({ stepNumber, steps }) => {
+        const evidenceTool = nextMatchEvidenceTool(text, steps.flatMap((step) => step.toolResults));
+        if (evidenceTool) return { toolChoice: { type: 'tool' as const, toolName: evidenceTool } };
         return { toolChoice: stepNumber === 0 && needsLookup(text) ? 'required' : 'auto' };
       },
       onFinish: ({ usage }) => {
         console.log(JSON.stringify({ t: Date.now(), byok: !!body.config && 'apiKey' in body.config, usage }));
       },
     });
-    const res = result.toUIMessageStreamResponse({
-      onError: (e) => (e instanceof Error ? e.message : '服务异常'),
-    });
+    const stream = result.toUIMessageStream({ onError: (e) => (e instanceof Error ? e.message : '服务异常') });
+    const res = createUIMessageStreamResponse({ stream: statsOnly ? stream.pipeThrough(createVerifiedStatsStream()) : stream });
     // ai v7 响应构造无 transform 选项,改为在 SSE 响应体上包一层剥离流(帧格式保持不变)
     return new Response(res.body!.pipeThrough(createEmojiStripSseStream()), {
       status: res.status,

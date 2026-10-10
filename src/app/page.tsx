@@ -3,6 +3,7 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useMemo, useRef, useState } from 'react';
 import { useStickToBottom } from 'use-stick-to-bottom';
+import { ChatActions } from '@/components/chat/ChatActions';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { Composer } from '@/components/chat/Composer';
 import { GameContext } from '@/components/chat/GameContext';
@@ -39,6 +40,7 @@ export default function Home() {
   const lastMessage = chat.messages.at(-1);
   const { sessions, activeId, switchTo, startNew, remove } = useSessions(chat);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const newChat = async () => { await startNew(); setTiming(undefined); setDrawerOpen(false); chat.clearError(); };
   const selectChat = async (id: string) => { await switchTo(id); setTiming(undefined); setDrawerOpen(false); chat.clearError(); void scrollToBottom(); };
@@ -51,7 +53,7 @@ export default function Home() {
         <h1 aria-label="NBA Chat"><span className="nba-brand-word">NBA <em>Chat</em></span></h1>
         <nav className="nba-nav" aria-label="主导航"><button type="button" className="nba-nav-item active" onClick={() => { if (hasMessages) void newChat(); }} aria-current="page">聊比赛</button><button type="button" className="nba-nav-item" onClick={() => setDrawerOpen(true)}>历史对话</button></nav>
       </div>
-      <div className="nba-header-end"><span className="nba-timezone"><Icon name="clock" />北京时间<Icon name="chevron" width="12" height="12" /></span><button type="button" className="nba-header-new" onClick={() => { void newChat(); }} aria-label="新建会话"><Icon name="plus" width="16" height="16" /><span>新对话</span></button><button type="button" className="nba-icon-btn nba-profile" onClick={() => setSettingsOpen(true)} aria-label="设置" disabled={busy}><Icon name="user" /><Icon name="more" /></button></div>
+      <div className="nba-header-end"><span className="nba-timezone"><Icon name="clock" />北京时间<Icon name="chevron" width="12" height="12" /></span><button type="button" className="nba-header-new" onClick={() => { void newChat(); }} aria-label="新建会话"><Icon name="plus" width="16" height="16" /><span>新对话</span></button><button type="button" className="nba-icon-btn nba-profile" onClick={() => setSettingsOpen(true)} aria-label="设置" disabled={busy}><Icon name="user" /></button><button type="button" className="nba-icon-btn courtside-more" onClick={() => setActionsOpen(true)} aria-label="更多操作" aria-haspopup="dialog" aria-expanded={actionsOpen}><Icon name="more" /></button></div>
     </header>
     {!hasMessages ? <CourtsideHome onAsk={send} onStop={() => { void chat.stop(); }} busy={busy} /> : <>
       {currentGame && <GameContext game={currentGame} onClear={() => { void newChat(); }} />}
@@ -62,6 +64,7 @@ export default function Home() {
       </div></div>{!isAtBottom && <button type="button" className="nba-scroll-latest" onClick={() => { void scrollToBottom({ animation: 'instant' }); }}><Icon name="down" width="16" height="16" />回到最新</button>}</div>
       <Composer key={activeId} onSend={send} onStop={() => { void chat.stop(); }} busy={busy} hasMessages={true} placeholder={currentGame ? '继续问这场比赛…' : undefined} />
     </>}
+    {actionsOpen && <ChatActions busy={busy} onClose={() => setActionsOpen(false)} onNew={() => { setActionsOpen(false); void newChat(); }} onHistory={() => { setActionsOpen(false); setDrawerOpen(true); }} onSettings={() => { setActionsOpen(false); setSettingsOpen(true); }} />}
     {drawerOpen && <SessionDrawer sessions={sessions} activeId={activeId} onSelect={(id) => { void selectChat(id); }} onNew={() => { void newChat(); }} onDelete={remove} onClose={() => setDrawerOpen(false)} />}
     {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} onSave={(next) => { setConfig(next); setSettingsOpen(false); }} />}
   </main>;

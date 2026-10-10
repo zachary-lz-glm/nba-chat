@@ -23,14 +23,33 @@ const TEAMS: Record<string, [string, string]> = {
 };
 export const teamName = (abbr: string, fallback = '') => TEAMS[abbr]?.[0] ?? (fallback || abbr);
 export const teamColor = (abbr: string) => TEAMS[abbr]?.[1] ?? '#AAB8CA';
-export const statusLabel = (status: string) => ({ Final: '已结束', Scheduled: '未开始', 'In Progress': '进行中', Postponed: '已延期', Canceled: '已取消', Cancelled: '已取消', 'Final/OT': '加时结束' }[status] ?? status);
+export const statusLabel = (status: string) => /^Final\/\d*OT$/i.test(status) ? '加时结束' : ({ Halftime: '中场休息', 'End of Period': '节间休息', 'Pre-Game': '赛前', Final: '已结束', Scheduled: '未开始', 'In Progress': '进行中', Postponed: '已延期', Canceled: '已取消', Cancelled: '已取消', 'Final/OT': '加时结束' }[status] ?? status);
+export function gamePhase(game: GameCard): 'upcoming' | 'live' | 'final' | 'unavailable' {
+  if (/^Final(?:\/|$)/i.test(game.status)) return 'final';
+  if (/^(Scheduled|Pre-Game)$/i.test(game.status)) return 'upcoming';
+  if (/^(In Progress|Halftime|End of Period)$/i.test(game.status)) return 'live';
+  return 'unavailable';
+}
+export function gameAction(game: GameCard) {
+  const phase = gamePhase(game);
+  return phase === 'upcoming' ? { label: '赛前看点', intent: 'preview' as const }
+    : phase === 'live' ? { label: '比赛进行到哪了？', intent: 'live' as const }
+    : phase === 'final' ? { label: '比赛复盘', intent: 'recap' as const }
+    : { label: '查看赛程状态', intent: 'schedule' as const };
+}
+export function selectFeaturedGame(games: GameCard[]) {
+  return games.find((game) => gamePhase(game) === 'live')
+    ?? games.find((game) => gamePhase(game) === 'upcoming')
+    ?? games.findLast((game) => gamePhase(game) === 'final')
+    ?? games[0];
+}
 export function quarterLabel(quarter: string) {
   const n = Number(quarter.replace(/^Q/, ''));
   return n > 4 ? `加时 ${n - 4}` : ['第一节', '第二节', '第三节', '第四节'][n - 1] ?? '比赛记录';
 }
-export function gameQuestion(game: GameCard, intent: 'preview' | 'recap' | 'plays' | 'box') {
+export function gameQuestion(game: GameCard, intent: 'preview' | 'recap' | 'plays' | 'box' | 'live' | 'form' | 'schedule') {
   const fixture = `北京时间${gameDate(game)} ${teamName(game.awayAbbr, game.awayTeam)}对${teamName(game.homeAbbr, game.homeTeam)}的比赛`;
-  return ({ preview: `${fixture}有哪些赛前看点？请区分已知事实和分析。`, recap: `请复盘${fixture}，先给结论，再用这场的技术统计与逐回合记录说明。`, plays: `请查看${fixture}第四节及加时最后两分钟的逐回合记录，注明双方比分顺序。`, box: `请查看${fixture}两队主要球员的得分、篮板、助攻。` })[intent];
+  return ({ preview: `${fixture}有哪些赛前看点？请区分已知事实和分析。`, recap: `请复盘${fixture}，先给结论，再用这场的技术统计与逐回合记录说明。`, plays: `请查看${fixture}第四节及加时最后两分钟的逐回合记录，注明双方比分顺序。`, box: `请查看${fixture}两队主要球员的得分、篮板、助攻。`, live: `请查询${fixture}目前的比分、状态和已发生的关键回合，注明查询时间，不把进行中的比赛当作已结束。`, form: `${fixture}开赛前，两队本赛季战绩和近期表现如何？请查询已有比赛记录，不提供尚未发生的本场技术统计。`, schedule: `请核对${fixture}的赛程状态与开球时间；若延期、取消或暂无数据，请如实说明。` })[intent];
 }
 export function gameDate(game: GameCard) {
   const parts = /^(\d{4})[-年](\d{1,2})[-月](\d{1,2})/.exec(game.tipoffBeijing);

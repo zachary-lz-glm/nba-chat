@@ -21,7 +21,7 @@ export function ChatMessage({ message, elapsed, streaming, context, onAsk, busy 
   const lookups = getLookups(message.parts, !!streaming);
   const hasText = message.parts.some((part) => part.type === 'text' && part.text.length > 0);
   return <article className="nba-msg-assist" aria-label="NBA Chat 的回答" aria-busy={streaming}>
-    <div className="nba-assist-label"><span className="nba-assist-mark"><Icon name="ball" width="15" height="15" /></span>NBA CHAT<span>比赛解读</span></div>
+    <div className="nba-assist-label"><span className="nba-assist-mark"><Icon name="ball" width="15" height="15" /></span>NBA Chat<span>比赛解读</span></div>
     <ToolStrip lookups={lookups} /><DataCards parts={message.parts} context={context} onAsk={onAsk} busy={busy} />
     <div className={`nba-msg-bot${streaming && hasText ? ' streaming' : ''}`}>
       {message.parts.map((part, i) => part.type === 'text' ? <Markdown key={i} content={part.text} /> : null)}
