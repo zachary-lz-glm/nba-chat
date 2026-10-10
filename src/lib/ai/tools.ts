@@ -5,7 +5,7 @@ import { getBoxScore, getPlays, getGameMeta } from '../espn/summary';
 import { getStandings } from '../espn/standings';
 import { searchPlayer, getAthleteProfile, getAthleteCareer, getAthleteGamelog } from '../espn/players';
 import { getNews } from '../espn/news';
-import { getWikiSummary } from '../espn/wiki';
+import { getWikiSummary, getNbaChampions } from '../espn/wiki';
 
 type Ctx = { fetchImpl?: <T>(u: string) => Promise<T> } & Record<string, unknown>;
 // 工具 execute 直接调用客户端函数,末参传 ctx?.fetchImpl(生产为 undefined 走真实 fetch;单测注入 fixture)
@@ -124,6 +124,13 @@ export const nbaTools = {
         const games = await getAthleteGamelog(a.player_id, season, fetchOf(ctx));
         return { games, summary: summarizeGamelog(games) };
       } catch { return fail; }
+    },
+  }),
+  get_champions: tool({
+    description: '查 NBA 历年总冠军(近 30 年,年份→冠军队,含总决赛大比分与亚军)。凡问夺冠/卫冕/队史冠军/最近一次冠军类问题必须先调本工具,严禁凭记忆回答。',
+    inputSchema: z.object({}),
+    execute: async (_a, ctx) => {
+      try { return await getNbaChampions(fetchOf(ctx)); } catch { return fail; }
     },
   }),
   get_news_or_wiki: tool({

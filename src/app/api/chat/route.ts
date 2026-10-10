@@ -26,7 +26,7 @@ export async function POST(req: Request) {
       system: buildSystemPrompt(Date.now()),
       messages: await convertToModelMessages(body.messages),
       tools: nbaTools,
-      stopWhen: stepCountIs(12),
+      stopWhen: stepCountIs(16),
       onFinish: ({ usage }) => {
         console.log(JSON.stringify({ t: Date.now(), byok: !!body.config?.apiKey, usage }));
       },

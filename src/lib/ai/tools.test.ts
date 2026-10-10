@@ -6,8 +6,8 @@ import { nbaTools } from './tools';
 const load = (n: string) => JSON.parse(readFileSync(fileURLToPath(new URL(`../../../tests/fixtures/${n}`, import.meta.url)), 'utf8'));
 
 describe('nbaTools', () => {
-  it('9 个工具全部定义且带中文 description', () => {
-    expect(Object.keys(nbaTools)).toHaveLength(9);
+  it('10 个工具全部定义且带中文 description', () => {
+    expect(Object.keys(nbaTools)).toHaveLength(10);
     for (const t of Object.values(nbaTools)) expect(t.description!.length).toBeGreaterThan(10);
   });
   it('get_games_by_date 用 fixture 跑通(注入 fetch)', async () => {
@@ -22,5 +22,12 @@ describe('nbaTools', () => {
       fetchImpl: async () => { throw new Error('boom'); }, toolCallId: 'x', messages: [],
     } as any);
     expect((r as any).error).toBeTruthy();
+  });
+  it('get_champions 用 fixture 跑通(注入 fetch)', async () => {
+    const r = await nbaTools.get_champions.execute!({}, {
+      fetchImpl: async () => load('wiki-champions.json'), toolCallId: 'x', messages: [],
+    } as any);
+    expect(JSON.stringify(r)).toContain('OKC');
+    expect(JSON.stringify(r)).toContain('2025');
   });
 });
